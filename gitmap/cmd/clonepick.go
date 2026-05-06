@@ -42,6 +42,7 @@ func runClonePick(args []string) {
 	if err != nil {
 		cliexit.Fail(constants.CmdClonePick, "parse-args", parsed.RawURL, err, 2)
 	}
+	plan = maybeRunClonePickPicker(plan, parsed.Flags.Ask)
 
 	if plan.DryRun {
 		// `--output terminal`: emit the standardized block instead
@@ -97,6 +98,7 @@ func buildClonePickPlan(parsed clonePickParsed) (clonepick.Plan, int64, error) {
 
 	return plan, replayId, nil
 }
+
 
 // clonePickParsed bundles every output of parseClonePickFlags so a
 // new audit/debug toggle can be added without churning the call
