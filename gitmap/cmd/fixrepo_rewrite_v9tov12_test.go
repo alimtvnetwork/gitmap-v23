@@ -38,17 +38,17 @@ import (
 // rename collapsed every `-v9` token into `-v16` and silently broke
 // the test (rewriter found 0 tokens to bump). See
 // .lovable/memory/issues/2026-05-01-fixrepo-digit-capture-desync.md.
-const fixRepoV9ToV12FixtureBody = `// fixture-stamp: name=fixrepo-v9-to-v12 generation=1 min-current=12 for=v9->v12-width-cross sha=8054bb1b64d1
+const fixRepoV9ToV12FixtureBody = `// fixture-stamp: name=fixrepo-v9-to-v12 generation=1 min-current=12 for=v9->v12-width-cross sha=PLACEHOLDER
 module example.com/consumer
 
 require (
-	github.com/alimtvnetwork/gitmap-v18 v0.0.0
+	github.com/alimtvnetwork/gitmap-v9 v0.0.0
 )
 
-import gm "github.com/alimtvnetwork/gitmap-v18/gitmap/cmd"
+import gm "github.com/alimtvnetwork/gitmap-v9/gitmap/cmd"
 
-// repo URL: https://github.com/alimtvnetwork/gitmap-v18.git
-// guarded:  gitmap-v18 must NOT be rewritten by target=9 (v9 is a
+// repo URL: https://github.com/alimtvnetwork/gitmap-v9.git
+// guarded:  gitmap-v10 must NOT be rewritten by target=9 (v9 is a
 //           prefix of v10 — the negative-lookahead guard skips it)
 `
 
