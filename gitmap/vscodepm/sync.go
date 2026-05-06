@@ -42,20 +42,7 @@ func Sync(pairs []Pair) (SyncSummary, error) {
 		return SyncSummary{}, err
 	}
 
-	existing, err := readEntries(path)
-	if err != nil {
-		return SyncSummary{}, err
-	}
-
-	merged, summary := mergePairs(existing, pairs)
-
-	if err := writeEntriesAtomic(path, merged); err != nil {
-		return summary, err
-	}
-
-	summary.Total = len(merged)
-
-	return summary, nil
+	return SyncAt(path, pairs)
 }
 
 // RenameByPath updates the Name field of the entry whose rootPath matches.
