@@ -70,7 +70,7 @@ func TestSelectNoneClearsEverything(t *testing.T) {
 	}
 }
 
-func TestQuitFlagsCancelled(t *testing.T) { //nolint:misspell // matches exported ErrPickerCancelled spelling.
+func TestQuitFlagsCancelled(t *testing.T) {
 	m := newTestModel([]string{"a"}, nil)
 	next, cmd := m.handleKey(keyMsg("q"))
 	if !next.(pickerModel).cancelled { //nolint:misspell // matches exported ErrPickerCancelled spelling.
