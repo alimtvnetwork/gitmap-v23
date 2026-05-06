@@ -42,6 +42,7 @@ func runClonePick(args []string) {
 	if err != nil {
 		cliexit.Fail(constants.CmdClonePick, "parse-args", parsed.RawURL, err, 2)
 	}
+	plan = maybeRunClonePickPicker(plan, parsed.Flags.Ask)
 
 	if plan.DryRun {
 		// `--output terminal`: emit the standardized block instead
