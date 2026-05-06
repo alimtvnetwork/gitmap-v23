@@ -29,7 +29,8 @@ Cone mode is auto-flipped off when any path contains glob chars or a file extens
 - Source: `git ls-tree -r --name-only HEAD` against the partial clone in a temp dir (the same temp clone is reused for the final checkout — cloned once, not twice)
 - User-supplied `<paths>` pre-checked
 - Auto-greyed: `.git/`, `node_modules/`, `vendor/`, `dist/`, `build/`, `__pycache__/` (overridable via `clonePick.autoExclude` in config)
-- Keys: ↑/↓ move, →/enter expand, space toggle, a all, n none, s save & clone, q quit (exit 130)
+- Keys: ↑/↓/j/k move, pgup/pgdn (ctrl+b/ctrl+f) page, g/G (home/end) jump, space toggle, a all, n none, s/enter save & clone, q/ctrl+c quit (exit 130)
+- Windowed scroller (v4.22.0+): only the visible terminal window is rendered (height − 3 chrome rows); reacts to tea.WindowSizeMsg; default 20 rows pre-resize. Header shows "selected/total, rows N-M".
 
 ## Persistence: CloneInteractiveSelection table
 Columns: SelectionId PK, Name (optional, unique-non-empty enforced in store layer), RepoCanonicalId, RepoUrl, Mode, Branch, Depth, Cone, KeepGit, DestDir, PathsCsv (sorted+normalised), UsedAsk, CreatedAt. NO FK to Repo (picked repo may not be in any local scan). Indexed by RepoCanonicalId and by Name (partial index where Name <> '').
