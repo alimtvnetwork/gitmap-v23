@@ -101,12 +101,7 @@ gitmap cin       <source> -5                     [flags]`} />
               </tr>
             </thead>
             <tbody>
-              {[
-                { when: "An https:// or git@ URL", then: "git clone <url> into the derived folder name" },
-                { when: "An existing path with .git/", then: "Reuse the repo in place — never re-init" },
-                { when: "An existing folder, NO .git/", then: "git init in place (your files are kept untouched)" },
-                { when: "A path that does not exist", then: "mkdir -p <path> && git init <path>" },
-              ].map((row) => (
+              {autoInit.map((row) => (
                 <tr key={row.when} className="border-t border-border">
                   <td className="px-4 py-2 text-muted-foreground">{row.when}</td>
                   <td className="px-4 py-2 font-mono text-xs">{row.then}</td>
