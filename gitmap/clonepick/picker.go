@@ -19,8 +19,6 @@ package clonepick
 
 import (
 	"errors"
-	"fmt"
-	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -30,45 +28,8 @@ import (
 // MsgClonePickUserCancelled.
 var ErrPickerCancelled = errors.New("clone-pick: picker cancelled")
 
-// RunPicker enumerates plan.RepoUrl, opens the bubbletea picker, and
-// returns the user-picked subset. plan.Paths seeds the initial
-// selection so re-running with the same args is a no-op confirmation.
-func RunPicker(plan Plan) ([]string, error) {
-	picked, tmp, err := RunPickerKeep(plan)
-	if len(tmp) > 0 {
-		os.RemoveAll(tmp)
-	}
-
-	return picked, err
-}
-
-// RunPickerKeep is the clone-once variant: returns the picked paths
-// AND the temp metadata-clone directory so the executor can promote
-// it instead of re-cloning. The caller owns tmp and must remove it
-// (or pass it to the executor via Plan.PreClonedSrc, which moves it
-// into place). On error or cancellation tmp is already cleaned up.
-func RunPickerKeep(plan Plan) ([]string, string, error) {
-	all, tmp, err := ListRepoPathsKeep(plan)
-	if err != nil {
-		return nil, "", err
-	}
-	model := newPickerModel(all, plan.Paths)
-	prog := tea.NewProgram(model)
-	final, runErr := prog.Run()
-	if runErr != nil {
-		os.RemoveAll(tmp)
-
-		return nil, "", fmt.Errorf("clone-pick: picker run: %w", runErr)
-	}
-	finished, _ := final.(pickerModel)
-	if finished.cancelled {
-		os.RemoveAll(tmp)
-
-		return nil, "", ErrPickerCancelled
-	}
-
-	return finished.selected(), tmp, nil
-}
+// (program lifecycle -- RunPicker / RunPickerKeep -- lives in
+// picker_run.go to keep this file under the 200-line cap.)
 
 // pickerModel is the bubbletea model for the picker. Kept tiny so
 // each method stays under the 15-line cap; rendering is delegated to
@@ -77,9 +38,29 @@ type pickerModel struct {
 	paths     []string
 	picked    map[int]bool
 	cursor    int
-	cancelled bool
-	done      bool
+	// viewportHeight is the number of rows the row window can show
+	// at once (terminal height minus header + footer chrome). Set
+	// from tea.WindowSizeMsg; defaults to defaultViewportHeight
+	// when the terminal hasn't reported a size yet.
+	viewportHeight int
+	// scrollOffset is the index of the first row currently visible.
+	// Always in [0, len(paths)-viewportHeight] -- clamped by
+	// clampScroll after every cursor move.
+	scrollOffset int
+	cancelled    bool
+	done         bool
 }
+
+// defaultViewportHeight is the row-window size used until bubbletea
+// reports a real terminal height via tea.WindowSizeMsg. 20 rows fits
+// comfortably in any terminal we care about and matches the muscle
+// memory of `less -F` users.
+const defaultViewportHeight = 20
+
+// chromeRows is the number of rows reserved for the header line and
+// footer key-hint line (both newline-terminated). Subtracted from the
+// terminal height so the row window doesn't push the footer offscreen.
+const chromeRows = 3
 
 func newPickerModel(all, preselected []string) pickerModel {
 	picked := make(map[int]bool, len(preselected))
@@ -93,20 +74,43 @@ func newPickerModel(all, preselected []string) pickerModel {
 		}
 	}
 
-	return pickerModel{paths: all, picked: picked}
+	return pickerModel{
+		paths:          all,
+		picked:         picked,
+		viewportHeight: defaultViewportHeight,
+	}
 }
 
 // Init is required by tea.Model. Nothing to schedule on startup.
 func (m pickerModel) Init() tea.Cmd { return nil }
 
-// Update routes key events to handleKey. Non-key messages are
-// ignored -- the picker is a pure keyboard UI.
+// Update routes key events to handleKey and resize events to
+// handleResize. Other message types are ignored -- the picker is a
+// pure keyboard UI.
 func (m pickerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if k, ok := msg.(tea.KeyMsg); ok {
-		return m.handleKey(k)
+	switch t := msg.(type) {
+	case tea.KeyMsg:
+		return m.handleKey(t)
+	case tea.WindowSizeMsg:
+		return m.handleResize(t), nil
 	}
 
 	return m, nil
+}
+
+// handleResize updates the viewport height to match the terminal,
+// clamps the scroll offset, and returns the updated model. Reserves
+// chromeRows for the header + footer so the row window never pushes
+// either offscreen.
+func (m pickerModel) handleResize(msg tea.WindowSizeMsg) pickerModel {
+	height := msg.Height - chromeRows
+	if height < 1 {
+		height = 1
+	}
+	m.viewportHeight = height
+	m.scrollOffset = clampScroll(m.cursor, m.scrollOffset, height, len(m.paths))
+
+	return m
 }
 
 // handleKey implements every bound key. Returning tea.Quit on q / s
@@ -127,17 +131,11 @@ func (m pickerModel) handleKey(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleNavKey handles cursor + selection toggles. Split out so
-// handleKey stays under the function-length cap.
+// handleKey stays under the function-length cap. Cursor movement
+// re-clamps scrollOffset so the cursor row is always in view.
 func (m pickerModel) handleNavKey(k tea.KeyMsg) pickerModel {
+	m = applyCursorMove(m, k.String())
 	switch k.String() {
-	case "up", "k":
-		if m.cursor > 0 {
-			m.cursor--
-		}
-	case "down", "j":
-		if m.cursor < len(m.paths)-1 {
-			m.cursor++
-		}
 	case " ":
 		m.picked[m.cursor] = !m.picked[m.cursor]
 	case "a":
@@ -145,9 +143,14 @@ func (m pickerModel) handleNavKey(k tea.KeyMsg) pickerModel {
 	case "n":
 		m.picked = make(map[int]bool)
 	}
+	m.scrollOffset = clampScroll(m.cursor, m.scrollOffset,
+		m.viewportHeight, len(m.paths))
 
 	return m
 }
+
+// (cursor + scroll math lives in picker_nav.go to keep this file
+// under the 200-line cap.)
 
 // selectAll picks every non-auto-greyed row. Auto-greyed rows stay
 // off so a careless "a" doesn't drag node_modules/ into the clone.
