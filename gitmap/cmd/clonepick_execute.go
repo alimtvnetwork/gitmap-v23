@@ -69,7 +69,8 @@ func announceClonePickPersistence(plan clonepick.Plan, result clonepick.Result, 
 			replayId, plan.RepoCanonicalId, name)
 		if !plan.DryRun && db != nil {
 			if err := clonepick.TouchAfterReplay(db, replayId, plan.DryRun); err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				cliexit.Reportf(constants.CmdClonePick, "touch-replay",
+					strconv.FormatInt(replayId, 10), err)
 			}
 		}
 	case result.SelectionId > 0:
