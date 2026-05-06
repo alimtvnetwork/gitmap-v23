@@ -88,7 +88,7 @@ const ReleaseVersionPage = () => {
             <TabsTrigger value="unix">macOS / Linux</TabsTrigger>
           </TabsList>
 
-          {(["windows", "unix"] as ReleaseReleasePlatform[]).map((p) => (
+          {(["windows", "unix"] as ReleasePlatform[]).map((p) => (
             <TabsContent key={p} value={p} className="space-y-6 pt-6">
               {/* Pinned card */}
               <section className="rounded-lg border border-primary/40 bg-primary/5 p-5 space-y-3">
