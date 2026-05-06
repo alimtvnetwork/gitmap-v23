@@ -87,7 +87,9 @@ func TestViewRendersOnlyVisibleRows(t *testing.T) {
 	m := newTestModel(makeRows(500), nil)
 	resized, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: 23})
 	out := resized.(pickerModel).View()
-	rowLines := strings.Count(out, "\n") - 2 // header + footer lines
+	// Output shape: header\n + N row\n + blank\n + footer\n
+	// => total newlines = N + 3.
+	rowLines := strings.Count(out, "\n") - 3
 	want := 23 - chromeRows
 	if rowLines != want {
 		t.Fatalf("rendered %d row lines, want %d (out=%q)",
