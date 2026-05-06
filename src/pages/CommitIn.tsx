@@ -1,45 +1,13 @@
 import DocsLayout from "@/components/docs/DocsLayout";
 import CodeBlock from "@/components/docs/CodeBlock";
 import { GitCommit, Layers, Clock, ShieldCheck } from "lucide-react";
-
-const flags = [
-  { flag: "-d, --default", def: "off", desc: "Load the default profile bound to <source>" },
-  { flag: "--profile <name>", def: "—", desc: "Load .gitmap/commit-in/profiles/<name>.json" },
-  { flag: "--save-profile <name>", def: "—", desc: "Persist this run's resolved settings as a profile" },
-  { flag: "--save-profile-overwrite", def: "off", desc: "Allow --save-profile to overwrite" },
-  { flag: "--set-default", def: "off", desc: "Mark the saved profile as default for <source>" },
-  { flag: "--author-name <s>", def: "—", desc: "Override author name (requires --author-email)" },
-  { flag: "--author-email <s>", def: "—", desc: "Override author email (requires --author-name)" },
-  { flag: "--conflict <mode>", def: "ForceMerge", desc: "ForceMerge or Prompt" },
-  { flag: "--exclude <csv>", def: "—", desc: "Per-commit exclude list (trailing / = folder)" },
-  { flag: "--message-exclude <csv>", def: "—", desc: "Kind:Value rules: StartsWith: / EndsWith: / Contains:" },
-  { flag: "--message-prefix <csv>", def: "—", desc: "Random-pick pool prepended to every body" },
-  { flag: "--message-suffix <csv>", def: "—", desc: "Random-pick pool appended to every body" },
-  { flag: "--title-prefix <s>", def: "—", desc: "Prepended to the FIRST line only" },
-  { flag: "--title-suffix <s>", def: "—", desc: "Appended to the FIRST line only" },
-  { flag: "--override-messages <csv>", def: "—", desc: "Replaces the entire message (random pick)" },
-  { flag: "--override-only-weak", def: "off", desc: "Override only when the title's first word is weak" },
-  { flag: "--weak-words <csv>", def: "change,update,updates", desc: "First-word triggers for override" },
-  { flag: "--function-intel on|off", def: "off", desc: "Append per-language new-function block" },
-  { flag: "--languages <csv>", def: "Go", desc: "Languages scanned when intel is on" },
-  { flag: "--no-prompt", def: "off", desc: "Refuse interactive prompts; exit MissingAnswer if unset" },
-  { flag: "--dry-run", def: "off", desc: "Plan only; never run git commit" },
-  { flag: "--keep-temp", def: "off", desc: "Keep .gitmap/temp/<runId>/ after exit" },
-];
-
-const exitCodes = [
-  { code: "0", meaning: "Ok — every walked commit was Created or Skipped" },
-  { code: "1", meaning: "PartiallyFailed — at least one commit failed but others succeeded" },
-  { code: "2", meaning: "BadArgs — flag / positional validation failed" },
-  { code: "3", meaning: "SourceUnusable — <source> could not be resolved or initialized" },
-  { code: "4", meaning: "InputUnusable — at least one input could not be cloned / opened" },
-  { code: "5", meaning: "DbFailed — SQLite migration or write failed" },
-  { code: "6", meaning: "ProfileMissing — --profile / --default lookup empty" },
-  { code: "7", meaning: "MissingAnswer — --no-prompt set but a required value was unset" },
-  { code: "8", meaning: "ConflictAborted — Prompt mode and the user aborted the merge" },
-  { code: "9", meaning: "LockBusy — another commit-in run holds the workspace lock" },
-  { code: "10", meaning: "FunctionIntel — a per-language detector panicked" },
-];
+import {
+  commitInFlags as flags,
+  commitInExitCodes as exitCodes,
+  commitInAutoInit as autoInit,
+  commitInProfileJson as profileJson,
+} from "./commitInData";
+import CommitInExamples from "./CommitInExamples";
 
 const CommitInPage = () => (
   <DocsLayout>
@@ -119,26 +87,58 @@ gitmap cin       <source> -5                     [flags]`} />
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-3">Examples</h2>
-        <CodeBlock code={`# Append every versioned sibling into a fresh canonical repo
-gitmap commit-in ./canonical all --save-profile Default --set-default
+        <h2 className="text-xl font-semibold mb-3">How &lt;source&gt; auto-init works</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          You never have to <code>git init</code> first. <code>commit-in</code> resolves
+          <code> &lt;source&gt;</code> through a fixed dispatch table — no prompts, no flags,
+          no surprises:
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border border-border rounded-lg">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="text-left px-4 py-2 font-medium">If &lt;source&gt; is…</th>
+                <th className="text-left px-4 py-2 font-medium">commit-in does…</th>
+              </tr>
+            </thead>
+            <tbody>
+              {autoInit.map((row) => (
+                <tr key={row.when} className="border-t border-border">
+                  <td className="px-4 py-2 text-muted-foreground">{row.when}</td>
+                  <td className="px-4 py-2 font-mono text-xs">{row.then}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-# Replay only the last three siblings, dry-run, with function-intel
-gitmap cin ./canonical -3 --dry-run --function-intel on --languages Go,TypeScript
+      <CommitInExamples />
 
-# Pull from two remotes, override author, strip Signed-off-by lines
-gitmap cin git@github.com:me/canonical.git \\
-    https://github.com/me/old-fork.git,https://github.com/me/new-fork.git \\
-    --author-name "Jane Doe" --author-email jane@example.com \\
-    --message-exclude "StartsWith:Signed-off-by:"
-
-# Use a saved profile and only override weak commit titles
-gitmap cin ./canonical all --default \\
-    --override-messages "Refine implementation,Improve module" \\
-    --override-only-weak
-
-# Stitch in CI without prompts (fail loudly on any unset value)
-gitmap cin ./canonical all --profile CI --no-prompt`} />
+      <section>
+        <h2 className="text-xl font-semibold mb-3">Sample profile JSON</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Drop this file at{" "}
+          <code>.gitmap/commit-in/profiles/Default.json</code> (relative to your workspace
+          root — the nearest ancestor containing <code>.gitmap/</code>) and load it with{" "}
+          <code>--profile Default</code> or <code>--default</code>. Keys and enum values are
+          <strong> PascalCase</strong>; the loader uses <em>strict</em> decoding, so unknown
+          keys are an error. Edit anything you like — every field maps 1:1 to a CLI flag
+          above.
+        </p>
+        <CodeBlock
+          language="json"
+          title=".gitmap/commit-in/profiles/Default.json"
+          code={profileJson}
+        />
+        <p className="text-xs text-muted-foreground mt-3">
+          <strong>Tip:</strong> let gitmap write the file for you the first time —
+          <code> gitmap cin ./canonical all --save-profile Default --set-default</code> —
+          then open the resulting JSON and tweak. Re-saving requires{" "}
+          <code>--save-profile-overwrite</code>. Profiles bind by absolute symlink-resolved
+          path, NOT by remote URL, so two clones of the same upstream can carry different
+          policies.
+        </p>
       </section>
 
       <section>
