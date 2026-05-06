@@ -26,6 +26,7 @@ import (
 	"github.com/alimtvnetwork/gitmap-v16/gitmap/cliexit"
 	"github.com/alimtvnetwork/gitmap-v16/gitmap/clonepick"
 	"github.com/alimtvnetwork/gitmap-v16/gitmap/constants"
+	"github.com/alimtvnetwork/gitmap-v16/gitmap/store"
 )
 
 // runClonePick is the dispatcher entry registered in rootcore.go.
