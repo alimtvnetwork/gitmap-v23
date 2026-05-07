@@ -24,7 +24,7 @@ func ctxMenu() []ctxEntry {
 		{KeyName: "50_visibility", MUIVerb: "Visibility", Children: visibilityChildren()},
 		{KeyName: "60_tools", MUIVerb: "Tools", Children: toolsChildren()},
 		{KeyName: "90_terminal", MUIVerb: constants.MsgCtxOpenTerminalLbl, Mode: constants.CtxModePrefill},
-		{KeyName: "91_docs", MUIVerb: constants.MsgCtxDocsLbl, Args: []string{constants.CmdHelp}, Mode: constants.CtxModeSilent},
+		{KeyName: "91_docs", MUIVerb: constants.MsgCtxDocsLbl, Args: []string{constants.CmdDocs}, Mode: constants.CtxModeSilent},
 	}
 }
 
@@ -40,7 +40,6 @@ func cloneChildren() []ctxEntry {
 	return []ctxEntry{
 		{KeyName: "10_clone_next", MUIVerb: "Clone-next here", Args: []string{constants.CmdCloneNext}, Mode: constants.CtxModeTerminal},
 		{KeyName: "20_pull", MUIVerb: "Pull", Args: []string{constants.CmdPull}, Mode: constants.CtxModeTerminal},
-		{KeyName: "30_pull_all", MUIVerb: "Pull all", Args: []string{constants.CmdPullAll}, Mode: constants.CtxModeTerminal},
 	}
 }
 
@@ -67,8 +66,8 @@ func repoChildren() []ctxEntry {
 
 func visibilityChildren() []ctxEntry {
 	return []ctxEntry{
-		{KeyName: "10_public", MUIVerb: "Make public", Args: []string{constants.CmdVisibility, "public"}, Mode: constants.CtxModeTerminal},
-		{KeyName: "20_private", MUIVerb: "Make private", Args: []string{constants.CmdVisibility, "private"}, Mode: constants.CtxModeTerminal},
+		{KeyName: "10_public", MUIVerb: "Make public", Args: []string{constants.CmdMakePublic}, Mode: constants.CtxModeTerminal},
+		{KeyName: "20_private", MUIVerb: "Make private", Args: []string{constants.CmdMakePrivate}, Mode: constants.CtxModeTerminal},
 	}
 }
 
@@ -76,8 +75,7 @@ func toolsChildren() []ctxEntry {
 	return []ctxEntry{
 		{KeyName: "10_fix_repo", MUIVerb: "Fix repo", Args: []string{constants.CmdFixRepo}, Mode: constants.CtxModeTerminal},
 		{KeyName: "20_diff", MUIVerb: "Diff", Args: []string{constants.CmdDiff}, Mode: constants.CtxModeTerminal},
-		{KeyName: "30_logs", MUIVerb: "Logs", Args: []string{constants.CmdLog}, Mode: constants.CtxModeTerminal},
-		{KeyName: "40_history", MUIVerb: "History", Args: []string{constants.CmdHistory}, Mode: constants.CtxModeTerminal},
-		{KeyName: "50_update", MUIVerb: "Update", Args: []string{constants.CmdUpdate}, Mode: constants.CtxModeTerminal},
+		{KeyName: "30_history", MUIVerb: "History", Args: []string{constants.CmdHistory}, Mode: constants.CtxModeTerminal},
+		{KeyName: "40_update", MUIVerb: "Update", Args: []string{constants.CmdUpdate}, Mode: constants.CtxModeTerminal},
 	}
 }
