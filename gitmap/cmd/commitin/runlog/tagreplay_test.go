@@ -82,6 +82,7 @@ func TestRecordTagReplayCreatedWritesAllColumns(t *testing.T) {
 		DestTagSha:            "dest-tag-1",
 		DestCommitSha:         "new1",
 		MirroredReleaseBranch: "release/v1.2.3",
+		IsAnnotated:           true,
 		IsVersionTag:          true,
 		Outcome:               constants.TagReplayOutcomeCreated,
 	})
