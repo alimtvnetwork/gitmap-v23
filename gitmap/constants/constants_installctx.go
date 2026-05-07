@@ -19,13 +19,13 @@ const (
 )
 
 // CtxMode controls how an entry is wired into the registry.
-type CtxMode int
+type CtxMode = string
 
 // CtxMode values.
 const (
-	CtxModeTerminal CtxMode = iota // pwsh -NoExit, command runs and window stays open
-	CtxModeSilent                  // pwsh -WindowStyle Hidden, output via notifier
-	CtxModePrefill                 // pwsh -NoExit + writes "gitmap " prompt, no command run
+	CtxModeTerminal CtxMode = "terminal" // pwsh -NoExit, command runs and window stays open
+	CtxModeSilent   CtxMode = "silent"   // pwsh -WindowStyle Hidden, output via notifier
+	CtxModePrefill  CtxMode = "prefill"  // pwsh -NoExit + writes "gitmap " prompt, no command run
 )
 
 // User-facing labels and exec messages.
