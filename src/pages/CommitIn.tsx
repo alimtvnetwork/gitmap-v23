@@ -8,6 +8,7 @@ import {
   commitInProfileJson as profileJson,
 } from "./commitInData";
 import CommitInExamples from "./CommitInExamples";
+import CommitInWhatItCreates from "./CommitInWhatItCreates";
 
 const CommitInPage = () => (
   <DocsLayout>
@@ -48,6 +49,8 @@ const CommitInPage = () => (
           ))}
         </div>
       </section>
+
+      <CommitInWhatItCreates />
 
       <section>
         <h2 className="text-xl font-semibold mb-3">Usage</h2>
