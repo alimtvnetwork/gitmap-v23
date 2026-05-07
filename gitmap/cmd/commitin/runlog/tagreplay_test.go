@@ -99,7 +99,7 @@ func TestRecordTagReplayDryRunWritesNullDestColumns(t *testing.T) {
 	runID, rewID := seedRewrittenRow(t, db, "src2", "new2")
 	if _, err := RecordTagReplay(db, runID, rewID, TagReplayFacts{
 		SourceTagName: "v1.0.0", SourceTagSha: "tag-sha-2",
-		SourceCommitSha: "src2", IsVersionTag: true,
+		SourceCommitSha: "src2", IsAnnotated: true, IsVersionTag: true,
 		Outcome: constants.TagReplayOutcomeCreatedDryRun,
 	}); err != nil {
 		t.Fatalf("RecordTagReplay: %v", err)
