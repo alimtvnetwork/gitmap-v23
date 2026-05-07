@@ -57,7 +57,16 @@ var ErrTagReplayMiss = errors.New("runlog: tag replay lookup miss")
 // RecordTagReplay persists one CommitInReplayMap row. Empty string
 // fields are stored as SQL NULL where the column is nullable per
 // spec §9.4 (DestTagSha, DestCommitSha, MirroredReleaseBranch).
+//
+// Strict-semver gate: if the caller asserts `IsVersionTag=true` for a
+// lightweight tag (`IsAnnotated=false`), the insert is rejected with
+// ErrLightweightVersionTag. This is the SINGLE choke point that
+// guarantees `CommitInReplayMap.IsVersionTag=1` rows are always
+// annotated semver tags — no upstream filter can quietly drift.
 func RecordTagReplay(db *sql.DB, runID, rewrittenID int64, f TagReplayFacts) (int64, error) {
+	if f.IsVersionTag && !f.IsAnnotated {
+		return 0, fmt.Errorf("runlog: tag %q: %w", f.SourceTagName, ErrLightweightVersionTag)
+	}
 	outcomeID, err := lookupEnumID(db, constants.TableCommitInTagOutcome,
 		"TagReplayOutcomeId", f.Outcome)
 	if err != nil {
