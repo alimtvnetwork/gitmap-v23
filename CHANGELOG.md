@@ -1,5 +1,89 @@
 # Changelog
 
+## v4.38.0 — (2026-05-07) — `commit-in` tag-replay map (spec §09) + strict annotated-only semver gate; `vscode-pm-sync` gains `--path` / `--tag`
+
+### Added
+
+- **CommitInReplayMap (spec §09)** — new SQLite table (migration 007) plus
+  `TagReplayOutcome` enum mirror persists every mirrored annotated tag with
+  its old↔new SHA pair, the chosen `MirroredReleaseBranch`, an
+  `IsVersionTag` flag, and the run outcome (`Created` / `CreatedDryRun` /
+  `Skipped` / `AlreadyExists` / `Failed`). Indexes on `SourceTagName`,
+  `DestCommitSha`, and `MirroredReleaseBranch`. `(CommitInRunId,
+  SourceTagName)` is UNIQUE per run.
+- **`runlog.RecordTagReplay` / `LookupTagReplay`** — pure persistence
+  helpers. `LookupTagReplay` implements the §9.5 cross-run short-circuit
+  query keyed by `(SourceTagName, SourceTagSha)` and returns the typed
+  `ErrTagReplayMiss` sentinel (zero-swallow rule).
+- **`runlog.ClassifyVersionTag(name, isAnnotated)`** — canonical
+  strict-semver classifier. A tag is a "version tag" iff it is annotated
+  AND its name matches `constants.VersionTagPattern`. Lightweight tags
+  named `v1.2.3` are NEVER promoted to version-tag status.
+- **`--no-release-branch` flag on `gitmap commit-in`** — defaults branch
+  generation ON; suppresses `release/<tag>` materialisation across
+  replay-mapping and the (forthcoming §08) runner integration. Decision
+  centralised in `runlog.ResolveReleaseBranchName(tag, isAnnotated,
+  isNoReleaseBranch, isDryRun)` — single choke point.
+- **`--projects-json <path>` and `--tag <name>` flags on
+  `gitmap vscode-pm-sync` (`vpm`)** — override the resolved projects.json
+  location and append/replace the auto-derived tag set without touching
+  user-added tags.
+- New constants file `gitmap/constants/constants_commitin_tagreplay.go` and
+  SQL twin `constants_commitin_tagreplay_sql.go` centralise every magic
+  string (table names, enum literals, INSERT/SELECT statements).
+
+### Changed
+
+- **Strict-semver gate enforced at the persistence boundary**:
+  `RecordTagReplay` rejects any insert with `IsVersionTag=true` and
+  `IsAnnotated=false` via the new `ErrLightweightVersionTag` sentinel
+  before touching SQLite. This is the single guarantee that
+  `CommitInReplayMap.IsVersionTag=1` rows are always annotated semver
+  tags — no upstream filter can silently drift.
+- `TagReplayFacts` gains `IsAnnotated bool`; `ResolveReleaseBranchName`
+  gains an `isAnnotated` parameter. Lightweight tags whose name matches
+  the semver regex no longer receive a release branch.
+
+### Refactored
+
+- `gitmap/vscodepm/sync.go` (273 LOC) split into three files under the
+  200-line cap with no behavior change: `sync.go` (public API +
+  `readEntries`, 120 LOC), `merge.go` (`mergePairs*`, `applyMerge`,
+  `sameTagSet`, 88 LOC), `io.go` (atomic write + `normalizePath` /
+  `pathsEqual`, 83 LOC). The per-entry update inside
+  `mergePairsWithMode` was extracted into `applyMerge` to keep every
+  function under the 15-line cap.
+
+### Tests
+
+- New `gitmap/cmd/commitin/runlog/tagreplay_test.go` covers the R1
+  happy-path, R6 dry-run NULL columns, R8 cross-run hit, miss-on-failed,
+  unique-per-run constraint, lightweight-rejection gate, and a
+  `ClassifyVersionTag` matrix (8 cases) plus a 13-case detector matrix.
+- New `gitmap/store/migrate_commitin_replaymap_test.go` +
+  `_helpers_test.go` validate the migration with `PRAGMA table_info`,
+  `PRAGMA foreign_key_list`, index existence, the
+  `(CommitInRunId, SourceTagName)` UNIQUE, and the tagged-vs-untagged
+  commit distribution.
+- New `gitmap/cmd/commitin/runlog/releasebranch_test.go` adds the
+  lightweight-never-gets-branch case alongside the existing default-on,
+  flag-suppressed, dry-run, non-version, and flag-beats-everything
+  cases.
+- `gitmap/cmd/vscodepm-sync/...` parser tests cover `--projects-json`
+  and `--tag` overrides plus the existing `--no-release-branch`
+  default-off / flag-flip / reorder-past-positionals cases.
+
+### Spec
+
+- New `spec/03-commit-in/09-commit-in-replay-map.md` defines the
+  CommitInReplayMap schema, idempotency key, R1-R8 acceptance matrix,
+  and the §9.5 cross-run lookup contract.
+- `spec/03-commit-in/README.md` index updated; ERD stub blocks added to
+  `spec/01-app/gitmap-database-erd.mmd`.
+- `spec/03-commit-in/08-tag-mirroring-and-release-branches.md` §3
+  reaffirms that release branches require an annotated source tag.
+
+
 ## v4.37.0 — (2026-05-06) — `vscode-pm-sync` gains `--mode union|replace|intersection` for tag-merge strategy
 
 ### Added
