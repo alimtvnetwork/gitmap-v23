@@ -7,10 +7,26 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
+	"github.com/alimtvnetwork/gitmap-v18/gitmap/constants"
 	"github.com/alimtvnetwork/gitmap-v18/gitmap/vscodepm"
 )
+
+// vscodePMUserDataRel returns the OS-specific subpath under the home/temp
+// dir that ProjectsJSONPath() will look at, so test fixtures place
+// projects.json where the resolver actually reads it on every platform.
+func vscodePMUserDataRel() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return filepath.FromSlash(constants.VSCodeUserDataMacRel)
+	case "windows":
+		return constants.VSCodeUserDataRootDirName
+	default:
+		return filepath.Join(".config", constants.VSCodeUserDataRootDirName)
+	}
+}
 
 // setupVSCodePMSyncFixture creates a temp HOME, a real repo dir, and
 // a single-entry projects.json file pointing at the repo. Returns the
