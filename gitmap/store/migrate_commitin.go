@@ -61,6 +61,7 @@ func commitInDDL() []string {
 		constants.SQLSeedCommitInMessageRuleKind,
 		constants.SQLSeedCommitInLanguage,
 		constants.SQLSeedCommitInConflictMode,
+		constants.SQLSeedCommitInTagOutcome,
 	}
 }
 
