@@ -17,6 +17,13 @@ import (
 //
 // `Outcome` MUST be a constants.TagReplayOutcome* literal — the enum
 // FK is resolved here via the standard mirror-table lookup pattern.
+//
+// `IsAnnotated` records whether the SOURCE tag is annotated (true) or
+// lightweight (false). Lightweight tags can never be classified as
+// "version tags" regardless of their name — see ClassifyVersionTag
+// and the recorder gate below. This field is the single source of
+// truth for the strict-semver contract: the mapping layer refuses to
+// promote a lightweight `v1.2.3` to `IsVersionTag=1`.
 type TagReplayFacts struct {
 	SourceTagName         string
 	SourceTagSha          string
@@ -24,6 +31,7 @@ type TagReplayFacts struct {
 	DestTagSha            string // empty for DryRun / Failed / Skipped
 	DestCommitSha         string // empty for DryRun
 	MirroredReleaseBranch string // empty when no branch was mirrored
+	IsAnnotated           bool
 	IsVersionTag          bool
 	Outcome               string
 }
