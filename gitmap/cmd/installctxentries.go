@@ -10,6 +10,7 @@ type ctxEntry struct {
 	Args     []string
 	Mode     constants.CtxMode
 	Exe      string     // override executable; empty => use the gitmap binary
+	Extended bool       // Windows: Shift+right-click only (HKCU "Extended" REG_SZ); macOS/Linux: prepend confirm prompt
 	Children []ctxEntry // non-nil => this is a submenu
 }
 
@@ -44,6 +45,10 @@ func cloneChildren() []ctxEntry {
 	return []ctxEntry{
 		{KeyName: "10_clone_next", MUIVerb: "Clone-next here", Args: []string{constants.CmdCloneNext}, Mode: constants.CtxModeTerminal},
 		{KeyName: "20_pull", MUIVerb: "Pull", Args: []string{constants.CmdPull}, Mode: constants.CtxModeTerminal},
+		// Pull-all is a multi-repo batch op. Hidden behind Shift+right-click on Windows
+		// (Extended verb); on macOS/Linux it surfaces with a "(all repos)" label so the
+		// fan-out is obvious. Implemented as runPullAll => `gitmap pull --all`.
+		{KeyName: "30_pull_all", MUIVerb: "Pull all (every tracked repo)", Args: []string{constants.CmdPullAll}, Mode: constants.CtxModeTerminal, Extended: true},
 	}
 }
 

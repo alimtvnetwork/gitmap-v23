@@ -1605,7 +1605,8 @@ the exact command + flags gitmap runs. It mirrors
 | Scan ▸ Rescan                   | `gitmap rescan`                      | Terminal | Re-runs the most recent scan against the same root. |
 | Scan ▸ Find next                | `gitmap find-next`                   | Silent   | Probes for the next `<base>-vN+1` sibling. **No `--scan-folder`** (uses cwd); **no `--json`** (output goes to the OS notification verbatim). |
 | Clone ▸ Clone-next here         | `gitmap clone-next`                  | Terminal | Flattens to the base-name folder (v2.75.0+ default); version history tracked in `RepoVersionHistory`. |
-| Clone ▸ Pull                    | `gitmap pull`                        | Terminal | Fast-forward pull on the current repo only. **`pull-all` is intentionally NOT in the menu** — it's a multi-repo batch op for power users; right-clicking a single folder shouldn't fan out across the catalog. |
+| Clone ▸ Pull                    | `gitmap pull`                        | Terminal | Fast-forward pull on the current repo only. |
+| Clone ▸ Pull all (every tracked repo) | `gitmap pull-all` (= `pull --all`) | Terminal | **Power-user batch.** On Windows it's hidden behind **Shift+right-click** (HKCU `Extended` REG_SZ). On macOS/Linux there's no Shift filter, so the entry is visible but gated by an OS confirm dialog (`osascript display dialog` / `zenity`/`kdialog`/`xmessage`) before it fans out. |
 | Release ▸ Release current       | `gitmap release`                     | Terminal | Auto-bump-minor prompt; reads `latest.json` first, falls back to git tags. |
 | Release ▸ Release next          | `gitmap release --bump minor`        | Terminal | Hard-pinned to `--bump minor`. `--bump major` and `--bump patch` are deliberately not surfaced (one-click should never ship a breaking change). |
 | Release ▸ Release pull          | `gitmap release-pull`                | Terminal | `git pull` then `release`. |

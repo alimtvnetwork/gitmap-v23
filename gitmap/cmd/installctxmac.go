@@ -122,7 +122,16 @@ func macShellFor(e flatCtxEntry, exe string) string {
 	case constants.CtxModeSilent:
 		return fmt.Sprintf(`cd "$1" && OUT=$('%s' %s 2>&1); osascript -e "display notification \"$(echo \"$OUT\" | head -c 200)\" with title \"%s\""`, target, args, e.Label)
 	default:
-		return fmt.Sprintf(`osascript -e 'tell application "Terminal" to do script "cd \"'"$1"'\" && '"'"'%s'"'"' %s"' -e 'tell application "Terminal" to activate'`, target, args)
+		open := fmt.Sprintf(`osascript -e 'tell application "Terminal" to do script "cd \"'"$1"'\" && '"'"'%s'"'"' %s"' -e 'tell application "Terminal" to activate'`, target, args)
+		if e.Extended {
+			// Power-user fan-out: confirm before running. macOS lacks
+			// Shift-filter for Quick Actions, so we gate at the script.
+			guard := fmt.Sprintf(`osascript -e 'display dialog "Run %s on every tracked repo? This is a power-user batch action." buttons {"Cancel","Run"} default button "Cancel"' >/dev/null 2>&1 || exit 0`, e.Label)
+
+			return guard + " && " + open
+		}
+
+		return open
 	}
 }
 
