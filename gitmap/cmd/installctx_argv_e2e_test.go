@@ -121,12 +121,8 @@ func TestCtxReleaseNextE2EArgvComposes(t *testing.T) {
 			t.Fatalf("release-next args = %v, want %v", l.Args, want)
 		}
 		body := renderAllPlatformsForLeaf(l, exe)
-		needles := []string{
-			"release --bump minor",                       // composed argv
-			constants.CmdRelease + " " + wantJoined[len(constants.CmdRelease)+1:], // identity check
-		}
-		if miss, ok := containsAll(body, needles); !ok {
-			t.Fatalf("release-next render missing %q. Body:\n%s", miss, body)
+		if !strings.Contains(body, wantJoined) {
+			t.Fatalf("release-next render missing composed argv %q. Body:\n%s", wantJoined, body)
 		}
 
 		return
