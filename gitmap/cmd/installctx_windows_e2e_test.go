@@ -130,6 +130,17 @@ func lastSegment(key string) string {
 	return key
 }
 
+// lastPathSegment splits a dotted ctxFlatLeaf.Path ("20_clone.30_pull_all")
+// and returns the trailing segment ("30_pull_all"), which corresponds to
+// the leaf's Windows registry KeyName.
+func lastPathSegment(p string) string {
+	if i := strings.LastIndex(p, "."); i >= 0 {
+		return p[i+1:]
+	}
+
+	return p
+}
+
 // TestCtxWindowsCommandBodyMatchesMode asserts the per-mode pwsh
 // template is correctly applied: Prefill = -NoExit + "gitmap " prompt;
 // Silent = -WindowStyle Hidden + msg.exe pipe; Terminal = -NoExit + bare
