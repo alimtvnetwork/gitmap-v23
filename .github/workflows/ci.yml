@@ -1806,7 +1806,30 @@ jobs:
     # which is exactly when the comment is most useful.
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [sha-check, full-suite-guard]
+    # Depend on every gate we want to surface in the dashboard table.
+    # `if: always()` below means a failed/skipped gate doesn't block
+    # the comment from posting — the whole point is to surface red
+    # gates in the PR view.
+    needs:
+      - sha-check
+      - spell-check
+      - lint
+      - lint-script-tests
+      - lint-baseline-diff
+      - cmd-naming-check
+      - legacy-refs-check
+      - deploy-layout-check
+      - constants-naming-check
+      - constants-collision-check
+      - golden-allow-leak-check
+      - generate-check
+      - vulncheck
+      - json-snapshot-fast
+      - test
+      - installer-smoke
+      - installer-smoke-windows
+      - full-suite-guard
+      - build
     if: |
       always() &&
       github.event_name == 'pull_request' &&
@@ -1827,6 +1850,24 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SHA_SHORT: ${{ github.sha }}
+          # Dashboard inputs — one env var per gate, value is the raw
+          # GitHub job conclusion ("success" / "failure" / "skipped" /
+          # "cancelled"). pr-summary.sh maps these to ✅ / ❌ / ⏭ /
+          # ♻ icons. Repo-policy is a roll-up: red if ANY of its 7
+          # checks failed, otherwise the worst non-success status.
+          GATE_SPELL_CHECK: ${{ needs.spell-check.result }}
+          GATE_LINT: ${{ needs.lint.result }}
+          GATE_LINT_SCRIPT_TESTS: ${{ needs.lint-script-tests.result }}
+          GATE_LINT_BASELINE_DIFF: ${{ needs.lint-baseline-diff.result }}
+          GATE_REPO_POLICY: ${{ (contains(needs.*.result, 'failure') && (needs.cmd-naming-check.result == 'failure' || needs.legacy-refs-check.result == 'failure' || needs.deploy-layout-check.result == 'failure' || needs.constants-naming-check.result == 'failure' || needs.constants-collision-check.result == 'failure' || needs.golden-allow-leak-check.result == 'failure' || needs.generate-check.result == 'failure')) && 'failure' || 'success' }}
+          GATE_VULNCHECK: ${{ needs.vulncheck.result }}
+          GATE_TEST: ${{ needs.test.result }}
+          GATE_JSON_SNAPSHOT_FAST: ${{ needs.json-snapshot-fast.result }}
+          GATE_INSTALLER_SMOKE: ${{ needs.installer-smoke.result }}
+          GATE_INSTALLER_SMOKE_WINDOWS: ${{ needs.installer-smoke-windows.result }}
+          GATE_FULL_SUITE_GUARD: ${{ needs.full-suite-guard.result }}
+          GATE_BUILD: ${{ needs.build.result }}
+          SHA_DEDUPED: ${{ needs.sha-check.outputs.already-built }}
         run: |
           mkdir -p /tmp/pr-summary
           bash .github/scripts/pr-summary.sh \
