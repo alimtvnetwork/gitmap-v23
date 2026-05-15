@@ -289,6 +289,13 @@ func (db *DB) migrateRepoInjectTimestamps() {
 	db.addColumnIfNotExists(constants.SQLAddRepoLastInjectedVSCodeAt)
 }
 
+// migrateRepoLastClonedAt adds LastClonedAt (schema v26). Powers the
+// `gitmap release` auto-cd-into-most-recent-clone fallback. Defaults
+// to '' so legacy rows are treated as "never cloned by gitmap".
+func (db *DB) migrateRepoLastClonedAt() {
+	db.addColumnIfNotExists(constants.SQLAddRepoLastClonedAt)
+}
+
 // migrateVSCodeProjectPaths adds the JSON-encoded Paths TEXT column to
 // existing VSCodeProject tables (schema v20+, v3.39.0). No-op on fresh
 // installs and on already-migrated databases (handled by addColumnIfNotExists).
