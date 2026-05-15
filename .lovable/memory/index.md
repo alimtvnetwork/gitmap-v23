@@ -85,3 +85,4 @@ commit-in / cin (SPEC ONLY, spec 03-commit-in/, plan 2026-05-06): replays commit
 - [cfrp Skip No-vN](mem://features/cfrp-skip-no-version) — clone-fix-repo / cfrp gracefully skip fix-repo (one-line notice) when repo has no -vN suffix; --require-version restores strict exit. v4.43.0+.
 - [Open Command](mem://features/open-command) — `gitmap open` (op): launches BOTH GitHub Desktop and VS Code on the cwd repo, re-injecting on every call. v4.43.0+.
 - [Self-Install Auto-Setup](mem://features/selfinstall-auto-setup) — `gitmap self-install` invokes `gitmap setup` as a final non-fatal step so the gcd shell wrapper is installed without a separate command. v4.43.0+.
+- [GitHub Token gh CLI Fallback](mem://features/github-token-gh-cli-fallback) — `ghtoken.Resolve()` tries GITHUB_TOKEN → GH_TOKEN → `gh auth token`; release upload + repo creation use it transparently. v4.43.0+.
