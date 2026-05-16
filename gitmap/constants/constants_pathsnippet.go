@@ -52,26 +52,37 @@ function global:Get-GitmapCommand {
   return $null
 }
 function global:gcd {
-  $real = Get-GitmapCommand
-  if (-not $real) { Write-Error "gitmap executable not found"; return }
-  $env:GITMAP_WRAPPER = "1"
-  $env:GITMAP_COMMAND_WRAPPER = "1"
-  $dest = & $real cd @args
-  if ($LASTEXITCODE -ne 0) { return }
-  if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }
+  Invoke-GitmapAndSetLocation -GitMapArgs (@('cd') + $args)
 }
 function global:gitmap {
+  Invoke-GitmapAndSetLocation $args
+}
+function global:Invoke-GitmapAndSetLocation {
+  param([string[]]$GitMapArgs)
   $real = Get-GitmapCommand
   if (-not $real) { Write-Error "gitmap executable not found"; return }
-  if ($args.Count -gt 0 -and ($args[0] -eq 'cd' -or $args[0] -eq 'go')) {
+  if ($GitMapArgs.Count -gt 0 -and ($GitMapArgs[0] -eq 'cd' -or $GitMapArgs[0] -eq 'go')) {
     $env:GITMAP_WRAPPER = "1"
     $env:GITMAP_COMMAND_WRAPPER = "1"
-    $dest = & $real @args
+    $dest = & $real @GitMapArgs
     if ($LASTEXITCODE -ne 0) { return }
     if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }
     return
   }
-  & $real @args
+  $handoff = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "gitmap-handoff-$([System.Guid]::NewGuid().ToString('N')).txt")
+  try {
+    $env:GITMAP_HANDOFF_FILE = $handoff
+    $env:GITMAP_WRAPPER = "1"
+    $env:GITMAP_COMMAND_WRAPPER = "1"
+    & $real @GitMapArgs
+    if ((Test-Path -LiteralPath $handoff) -and ((Get-Item -LiteralPath $handoff).Length -gt 0)) {
+      $target = (Get-Content -LiteralPath $handoff -Raw).Trim()
+      if ($target -and (Test-Path -LiteralPath $target)) { Set-Location -LiteralPath $target }
+    }
+  }
+  finally {
+    Remove-Item -LiteralPath $handoff -ErrorAction SilentlyContinue
+    Remove-Item Env:\
 }
 # gitmap shell wrapper v2 end`
 )
