@@ -365,6 +365,18 @@ jobs:
               return $template.Replace('__GITMAP_DIR__', $safeDir)
           }
 
+          function Add-CommandWrapperToProfile([string]$profilePath, [string]$dir) {
+              if (-not $profilePath) { return }
+              $profileDir = Split-Path $profilePath -Parent
+              if ($profileDir -and -not (Test-Path $profileDir)) { New-Item -ItemType Directory -Path $profileDir -Force | Out-Null }
+              $block = Get-GitmapCommandWrapperBlock $dir
+              if (-not (Test-Path $profilePath)) { Add-Content -Path $profilePath -Value $block -Encoding UTF8; return }
+              $content = Get-Content $profilePath -Raw -ErrorAction SilentlyContinue
+              $pattern = "(?s)" + [regex]::Escape("# gitmap command wrapper v1") + ".*?" + [regex]::Escape("# gitmap command wrapper v1 end")
+              if ($content -match $pattern) { Set-Content -Path $profilePath -Value ([regex]::Replace($content, $pattern, $block, 1)) -Encoding UTF8; return }
+              Add-Content -Path $profilePath -Value $block -Encoding UTF8
+          }
+
           # --- Main ---
 
           Write-Host ""
@@ -380,6 +392,8 @@ jobs:
           finally { Remove-Item $result.TmpDir -Recurse -Force -ErrorAction SilentlyContinue }
 
           if (-not $NoPath) { Add-ToPath $resolvedDir }
+          Add-CommandWrapperToProfile $PROFILE $resolvedDir
+          Invoke-Expression (Get-GitmapCommandWrapperBlock $resolvedDir)
 
           # Download and extract docs-site
           Write-Step "Downloading docs-site..."
