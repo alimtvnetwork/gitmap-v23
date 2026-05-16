@@ -784,25 +784,95 @@ function Get-GitmapCommandWrapperBlock([string]$dir) {
     $template = @'
 # gitmap command wrapper v1
 function global:Get-GitmapCommand { $candidate = Join-Path -Path '__GITMAP_DIR__' -ChildPath 'gitmap.exe'; if (Test-Path -LiteralPath $candidate) { return $candidate }; return (Get-Command gitmap.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source }
-function global:gcd { $real = Get-GitmapCommand; if (-not $real) { Write-Error "gitmap executable not found"; return }; $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; $dest = & $real cd @args; if ($LASTEXITCODE -ne 0) { return }; if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest } }
-function global:gitmap { $real = Get-GitmapCommand; if (-not $real) { Write-Error "gitmap executable not found"; return }; if ($args.Count -gt 0 -and ($args[0] -eq 'cd' -or $args[0] -eq 'go')) { $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; $dest = & $real @args; if ($LASTEXITCODE -ne 0) { return }; if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }; return }; & $real @args }
+function global:Invoke-GitmapAndSetLocation { param([string[]]$GitMapArgs); $real = Get-GitmapCommand; if (-not $real) { Write-Error "gitmap executable not found"; return }; if ($GitMapArgs.Count -gt 0 -and ($GitMapArgs[0] -eq 'cd' -or $GitMapArgs[0] -eq 'go')) { $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; $dest = & $real @GitMapArgs; if ($LASTEXITCODE -ne 0) { return }; if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }; return }; $handoff = [IO.Path]::Combine([IO.Path]::GetTempPath(), "gitmap-handoff-$([Guid]::NewGuid().ToString('N')).txt"); try { $env:GITMAP_HANDOFF_FILE = $handoff; $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; & $real @GitMapArgs; if ((Test-Path -LiteralPath $handoff) -and ((Get-Item -LiteralPath $handoff).Length -gt 0)) { $target = (Get-Content -LiteralPath $handoff -Raw).Trim(); if ($target -and (Test-Path -LiteralPath $target)) { Set-Location -LiteralPath $target } } } finally { Remove-Item -LiteralPath $handoff -ErrorAction SilentlyContinue; Remove-Item Env:\GITMAP_HANDOFF_FILE -ErrorAction SilentlyContinue } }
+function global:gcd { Invoke-GitmapAndSetLocation -GitMapArgs (@('cd') + $args) }
+function global:gitmap { Invoke-GitmapAndSetLocation $args }
 # gitmap command wrapper v1 end
 '@
     return $template.Replace('__GITMAP_DIR__', $safeDir)
 }
 
+function Get-GitmapPowerShellShimContent([string]$dir) {
+    $safeDir = $dir.Replace("'", "''")
+    $template = @'
+$real = Join-Path -Path '__GITMAP_DIR__' -ChildPath 'gitmap.exe'
+if (-not (Test-Path -LiteralPath $real)) { Write-Error "gitmap executable not found: $real"; return }
+if ($args.Count -gt 0 -and ($args[0] -eq 'cd' -or $args[0] -eq 'go')) {
+  $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"
+  $dest = & $real @args
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }
+  return
+}
+$handoff = [IO.Path]::Combine([IO.Path]::GetTempPath(), "gitmap-handoff-$([Guid]::NewGuid().ToString('N')).txt")
+try {
+  $env:GITMAP_HANDOFF_FILE = $handoff; $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"
+  & $real @args
+  $exitCode = $LASTEXITCODE
+  if ((Test-Path -LiteralPath $handoff) -and ((Get-Item -LiteralPath $handoff).Length -gt 0)) {
+    $target = (Get-Content -LiteralPath $handoff -Raw).Trim()
+    if ($target -and (Test-Path -LiteralPath $target)) { Set-Location -LiteralPath $target }
+  }
+  exit $exitCode
+}
+finally {
+  Remove-Item -LiteralPath $handoff -ErrorAction SilentlyContinue
+  Remove-Item Env:\GITMAP_HANDOFF_FILE -ErrorAction SilentlyContinue
+}
+'@
+    return $template.Replace('__GITMAP_DIR__', $safeDir)
+}
+
+function Install-PowerShellShim([string]$dir) {
+    $shimPath = Join-Path $dir "gitmap.ps1"
+    Set-Content -Path $shimPath -Value (Get-GitmapPowerShellShimContent $dir) -Encoding UTF8
+    Write-OK "Installed PowerShell command shim: $shimPath"
+}
+
 function Add-CommandWrapperToProfile([string]$profilePath, [string]$dir) {
     $marker = "# gitmap command wrapper v1"
+    $endMarker = "# gitmap command wrapper v1 end"
     $block = Get-GitmapCommandWrapperBlock $dir
+    $profileDir = Split-Path $profilePath -Parent
+    if ($profileDir -and -not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
     if (-not (Test-Path $profilePath)) { Add-Content -Path $profilePath -Value $block -Encoding UTF8; return $true }
     $content = Get-Content $profilePath -Raw -ErrorAction SilentlyContinue
-    if ($content -and ($content -match [regex]::Escape($marker))) { return $false }
+    if ($content -and ($content -match [regex]::Escape($marker))) {
+        $pattern = "(?s)" + [regex]::Escape($marker) + ".*?" + [regex]::Escape($endMarker)
+        $rewritten = [regex]::Replace($content, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $block }, 1)
+        if ($rewritten -eq $content) { Add-Content -Path $profilePath -Value $block -Encoding UTF8; return $true }
+        Set-Content -Path $profilePath -Value $rewritten -Encoding UTF8
+        return $true
+    }
     Add-Content -Path $profilePath -Value $block -Encoding UTF8
     return $true
 }
 
 function Install-CommandWrapperForSession([string]$dir) {
     Invoke-Expression (Get-GitmapCommandWrapperBlock $dir)
+}
+
+function Update-PowerShellProfilePathLine([string]$profilePath, [string]$dir) {
+    $marker = "# gitmap-path"
+    $exportLine = "`$env:PATH = `"$dir;`$env:PATH`" $marker"
+    $profileDir = Split-Path $profilePath -Parent
+    if ($profileDir -and -not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
+    if (-not (Test-Path $profilePath)) {
+        Add-Content -Path $profilePath -Value "`n$exportLine" -Encoding UTF8
+        return $true
+    }
+    $lines = Get-Content $profilePath -ErrorAction SilentlyContinue
+    $filtered = @($lines | Where-Object { $_ -notmatch [regex]::Escape($marker) })
+    $filtered += $exportLine
+    $next = ($filtered -join "`r`n") + "`r`n"
+    $current = Get-Content $profilePath -Raw -ErrorAction SilentlyContinue
+    if ($current -eq $next) { return $false }
+    Set-Content -Path $profilePath -Value $next -Encoding UTF8
+    return $true
 }
 
 function Broadcast-EnvironmentChange {
@@ -842,6 +912,7 @@ public static class GitMapEnvNative {
 
 function Add-ToPath([string]$dir) {
     $modified = @()
+    Install-PowerShellShim $dir
 
     # --- 1. Windows User PATH (registry) -- covers CMD + new PowerShell windows ---
     $currentUserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
@@ -867,27 +938,7 @@ function Add-ToPath([string]$dir) {
     # --- 2. PowerShell $PROFILE -- ensures PATH in all PowerShell sessions ---
     $psProfilePath = $PROFILE
     if ($psProfilePath) {
-        $exportLine = "`$env:PATH = `"$dir;`$env:PATH`""
-        $marker = "# gitmap-path"
-        $markerLine = "$exportLine $marker"
-
-        $profileExists = Test-Path $psProfilePath
-        $alreadyPresent = $false
-
-        if ($profileExists) {
-            $content = Get-Content $psProfilePath -Raw -ErrorAction SilentlyContinue
-            if ($content -and ($content -match [regex]::Escape($marker))) {
-                $alreadyPresent = $true
-            }
-        }
-
-        if (-not $alreadyPresent) {
-            # Ensure parent directory exists
-            $profileDir = Split-Path $psProfilePath -Parent
-            if ($profileDir -and -not (Test-Path $profileDir)) {
-                New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-            }
-            Add-Content -Path $psProfilePath -Value "`n$markerLine" -Encoding UTF8
+        if (Update-PowerShellProfilePathLine $psProfilePath $dir) {
             Write-OK "Added to PowerShell profile: $psProfilePath"
             $modified += "PowerShell `$PROFILE"
         }
