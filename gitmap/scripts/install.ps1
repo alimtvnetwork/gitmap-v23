@@ -785,7 +785,7 @@ function Get-GitmapCommandWrapperBlock([string]$dir) {
 # gitmap command wrapper v1
 function global:Get-GitmapCommand { $candidate = Join-Path -Path '__GITMAP_DIR__' -ChildPath 'gitmap.exe'; if (Test-Path -LiteralPath $candidate) { return $candidate }; return (Get-Command gitmap.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source }
 function global:Invoke-GitmapAndSetLocation { param([string[]]$GitMapArgs); $real = Get-GitmapCommand; if (-not $real) { Write-Error "gitmap executable not found"; return }; if ($GitMapArgs.Count -gt 0 -and ($GitMapArgs[0] -eq 'cd' -or $GitMapArgs[0] -eq 'go')) { $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; $dest = & $real @GitMapArgs; if ($LASTEXITCODE -ne 0) { return }; if ($dest -and (Test-Path -LiteralPath $dest)) { Set-Location -LiteralPath $dest }; return }; $handoff = [IO.Path]::Combine([IO.Path]::GetTempPath(), "gitmap-handoff-$([Guid]::NewGuid().ToString('N')).txt"); try { $env:GITMAP_HANDOFF_FILE = $handoff; $env:GITMAP_WRAPPER = "1"; $env:GITMAP_COMMAND_WRAPPER = "1"; & $real @GitMapArgs; if ((Test-Path -LiteralPath $handoff) -and ((Get-Item -LiteralPath $handoff).Length -gt 0)) { $target = (Get-Content -LiteralPath $handoff -Raw).Trim(); if ($target -and (Test-Path -LiteralPath $target)) { Set-Location -LiteralPath $target } } } finally { Remove-Item -LiteralPath $handoff -ErrorAction SilentlyContinue; Remove-Item Env:\GITMAP_HANDOFF_FILE -ErrorAction SilentlyContinue } }
-function global:gcd { Invoke-GitmapAndSetLocation @('cd') + $args }
+function global:gcd { Invoke-GitmapAndSetLocation -GitMapArgs (@('cd') + $args) }
 function global:gitmap { Invoke-GitmapAndSetLocation $args }
 # gitmap command wrapper v1 end
 '@
@@ -842,7 +842,7 @@ function Add-CommandWrapperToProfile([string]$profilePath, [string]$dir) {
     if ($content -and ($content -match [regex]::Escape($marker))) {
         $pattern = "(?s)" + [regex]::Escape($marker) + ".*?" + [regex]::Escape($endMarker)
         $rewritten = [regex]::Replace($content, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $block }, 1)
-        if ($rewritten -eq $content) { return $false }
+        if ($rewritten -eq $content) { Add-Content -Path $profilePath -Value $block -Encoding UTF8; return $true }
         Set-Content -Path $profilePath -Value $rewritten -Encoding UTF8
         return $true
     }
@@ -852,6 +852,27 @@ function Add-CommandWrapperToProfile([string]$profilePath, [string]$dir) {
 
 function Install-CommandWrapperForSession([string]$dir) {
     Invoke-Expression (Get-GitmapCommandWrapperBlock $dir)
+}
+
+function Update-PowerShellProfilePathLine([string]$profilePath, [string]$dir) {
+    $marker = "# gitmap-path"
+    $exportLine = "`$env:PATH = `"$dir;`$env:PATH`" $marker"
+    $profileDir = Split-Path $profilePath -Parent
+    if ($profileDir -and -not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
+    if (-not (Test-Path $profilePath)) {
+        Add-Content -Path $profilePath -Value "`n$exportLine" -Encoding UTF8
+        return $true
+    }
+    $lines = Get-Content $profilePath -ErrorAction SilentlyContinue
+    $filtered = @($lines | Where-Object { $_ -notmatch [regex]::Escape($marker) })
+    $filtered += $exportLine
+    $next = ($filtered -join "`r`n") + "`r`n"
+    $current = Get-Content $profilePath -Raw -ErrorAction SilentlyContinue
+    if ($current -eq $next) { return $false }
+    Set-Content -Path $profilePath -Value $next -Encoding UTF8
+    return $true
 }
 
 function Broadcast-EnvironmentChange {
