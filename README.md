@@ -1858,6 +1858,24 @@ gitmap r       [version] [flags]
 
 Concise, grouped per version. Each entry calls out **💥 Breaking**, **✨ Enhancements**, and **🐛 Fixes**. Versions with nothing in a category omit it. Full history lives in [`CHANGELOG.md`](CHANGELOG.md); query it from the CLI with `gitmap changelog vX.Y.Z` or `gitmap cl --limit 5`.
 
+#### v5.10.0 — 2026-05-16 — PowerShell wrapper loads last
+
+- 🐛 **Fixes:** `gitmap setup` / installer rewrites now move the managed `gitmap`/`gcd` PowerShell command wrapper to the end of `$PROFILE`. This stops older `# gitmap shell wrapper v2` blocks or hand-edited snippets appearing later in the profile from overriding the fresh wrapper and leaving `gitmap cd` stuck on the raw-exe warning.
+
+#### v5.9.0 — 2026-05-16 — Harden PowerShell `gitmap cd` activation
+
+- 🐛 **Fixes:**
+  - Windows installers now write the `gitmap`/`gcd` command wrapper to **all** standard current-user PowerShell profile files (Windows PowerShell + PowerShell 7+), not only the one profile visible to the installer host.
+  - Installer also loads the wrapper into the current session even when PATH was already present; release ZIP shim supports the same `GITMAP_HANDOFF_FILE` handoff as the generated shim.
+
+#### v5.8.0 — 2026-05-16 — `fix-repo` bare-base rewrite for pre-versioned v1 repos
+
+- ✨ **Enhancements:** `gitmap fix-repo` now rewrites bare `{base}` occurrences (not just `{base}-v1`) when v1 is in the target span. Pre-versioned remotes shipped without a `-v1` suffix, so downstream references read e.g. `img-pdf` rather than `img-pdf-v1`; the previous rewriter skipped them entirely and reported `changed: 0`. The bare-base sweep is guarded by strict word-boundary checks (alnum / `_` / `-` / `.`) so `{base}-v2`, `{base}.js`, `{base}_alt`, and `myimg-pdf` are left untouched. Skipped automatically when v1 is not in the target set.
+
+#### v5.7.0 — 2026-05-16 — Ship PowerShell shim in release installs
+
+- 🐛 **Fixes:** Windows release ZIPs now contain both `gitmap.exe` **and** `gitmap.ps1`, and the release-specific `install.ps1` moves the shim beside the exe. Users installing from release assets previously never received `gitmap.ps1`, so PowerShell resolved the raw exe and printed the wrapper-not-active warning even after upgrading.
+
 #### v3.52.0 — 2026-04-21 — CI lint baseline cache controls (docs)
 
 - ✨ **Enhancements:** `spec/09-pipeline/01-ci-pipeline.md` now documents the two `workflow_dispatch` inputs (`lint_baseline_cache_version`, `lint_baseline_disable`) that let operators rotate or bypass the golangci-lint baseline cache without editing the workflow. Includes copy-paste `gh workflow run` examples and a new "Job: Lint Baseline Diff" section covering cache keys, seeding mode, and sticky PR comment behavior.
