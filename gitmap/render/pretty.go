@@ -19,6 +19,10 @@ const (
 	TokCyanClose   = "[/C]"
 	TokMutedOpen   = "[M]"
 	TokMutedClose  = "[/M]"
+	TokGreenOpen   = "[G]"
+	TokGreenClose  = "[/G]"
+	TokMagentaOpen = "[P]"
+	TokMagentaClose = "[/P]"
 
 	collapseArrow = "→ "
 	bodyIndent    = "  "
