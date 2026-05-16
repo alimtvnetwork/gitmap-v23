@@ -92,8 +92,8 @@ func resolveCloneFixRepoName(absPath string) string {
 
 		return filepath.Base(absPath)
 	}
-	_, _, repo, ok := parseRemoteURL(remoteURL)
-	if ok {
+	repo := repoNameFromURL(remoteURL)
+	if len(repo) > 0 {
 		return repo
 	}
 	fmt.Fprintf(os.Stderr, constants.WarnCloneFixRepoRemoteFmt, remoteURL, constants.ErrCloneFixRepoRemoteParse)
