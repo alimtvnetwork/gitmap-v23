@@ -25,10 +25,12 @@ const (
 const (
 	MsgCloneFixRepoDone        = "clone-fix-repo: pipeline completed in %s\n"
 	MsgCloneFixRepoSkipNoVer   = "  fix-repo: skipped (repo %q has no -vN suffix, nothing to rewrite)\n    pass --require-version to fail instead.\n"
+	WarnCloneFixRepoRemoteFmt  = "  Warning: could not resolve cloned repo remote from %q: %v\n"
 	ErrCloneFixRepoUsage       = "clone-fix-repo: ERROR <url> is required\n  usage: gitmap clone-fix-repo <url> [folder]\n  usage: gitmap clone-fix-repo-pub <url> [folder]\n"
 	ErrCloneFixRepoChdirFmt    = "clone-fix-repo: ERROR cannot cd into %q: %v\n"
 	ErrCloneFixRepoExecFmt     = "clone-fix-repo: ERROR could not run chained step: %v\n"
 	ErrCloneFixRepoNeedVersion = "clone-fix-repo: ERROR --require-version set but repo %q has no -vN suffix\n"
+	ErrCloneFixRepoRemoteParse = "unparseable remote URL"
 )
 
 // Clone-fix-repo flags.
