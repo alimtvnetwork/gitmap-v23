@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/alimtvnetwork/gitmap-v19/gitmap/constants"
@@ -15,8 +16,41 @@ func InstallCDFunction(shell string) error {
 	if len(snippet) == 0 {
 		return fmt.Errorf(constants.ErrCompUnknownShell, shell)
 	}
+	if shell == constants.ShellPowerShell {
+		return installPowerShellCDFunction(snippet)
+	}
 
 	return appendCDFunctions(snippet, cdProfilePaths(shell))
+}
+
+func installPowerShellCDFunction(snippet string) error {
+	if err := appendCDFunctions(snippet, cdProfilePaths(constants.ShellPowerShell)); err != nil {
+		return err
+	}
+	if runtime.GOOS != constants.OSWindows {
+		return nil
+	}
+
+	return installPowerShellCommandShim()
+}
+
+func installPowerShellCommandShim() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(exe)
+	body := renderPowerShellCommandShim(dir)
+
+	return os.WriteFile(filepath.Join(dir, constants.PowerShellShimFile), []byte(body), 0o644)
+}
+
+func renderPowerShellCommandShim(dir string) string {
+	escaped := strings.ReplaceAll(dir,
+		constants.PowerShellSingleQuote,
+		constants.PowerShellEscapedQuote)
+
+	return fmt.Sprintf(constants.PowerShellShimTemplateFmt, escaped)
 }
 
 // cdSnippet returns the gcd function body for the given shell.
