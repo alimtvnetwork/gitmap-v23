@@ -42,4 +42,4 @@ const (
 )
 
 // Prune help text.
-const HelpPrune = "  prune (pr)          Delete stale release branches that have been tagged"
+const HelpPrune = "  prune (prn)         Delete stale release branches that have been tagged"
