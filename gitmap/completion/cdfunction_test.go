@@ -149,3 +149,18 @@ func TestAppendCDFunctionsWritesToMultipleProfiles(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderPowerShellCommandShimPinsInstalledExe(t *testing.T) {
+	got := renderPowerShellCommandShim(`C:\Tools\git'map`)
+	wants := []string{
+		`Join-Path -Path 'C:\Tools\git''map' -ChildPath 'gitmap.exe'`,
+		"Set-Location -LiteralPath $dest",
+		constants.EnvGitmapCommandWrapper,
+		constants.EnvGitmapHandoffFile,
+	}
+	for _, want := range wants {
+		if !strings.Contains(got, want) {
+			t.Fatalf("shim missing %q\n%s", want, got)
+		}
+	}
+}
