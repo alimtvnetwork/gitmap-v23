@@ -1607,6 +1607,16 @@ main() {
 
     verify_installation "${bin_path}" "${APP_DIR}"
 
+    # v5.18.0+: auto-run `gitmap setup` so the shell wrapper (gcd /
+    # gitmap function) + completions are installed without a second
+    # command. Setup is idempotent (marker `# gitmap shell wrapper v2`).
+    # Non-fatal: install itself already succeeded.
+    if [ -x "${bin_path}" ]; then
+        echo ""
+        printf '  \033[36m→ Running '\''gitmap setup'\'' to install shell wrapper + completions...\033[0m\n' >&2
+        "${bin_path}" setup || printf '  \033[33m(setup auto-run skipped — run '\''gitmap setup'\'' manually)\033[0m\n' >&2
+    fi
+
     echo ""
     ok "Done! Run 'gitmap --help' to get started."
     echo ""
