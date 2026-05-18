@@ -363,7 +363,8 @@ var InstallToolDescriptions = map[string]string{
 	ToolVSCodeSync:    "VS Code Settings -- sync VS Code settings and extensions",
 	ToolOBSSync:       "OBS Settings -- sync OBS Studio profiles and scenes",
 	ToolWTSync:        "WT Settings -- sync Windows Terminal settings.json",
-	ToolScripts:       "Clone gitmap scripts to local folder",
+	ToolScripts:        "Clone gitmap scripts to local folder",
+	ToolGitmapOneliner: "Print the Windows + macOS install-gitmap one-liners",
 }
 
 // InstallToolCategories groups tools by category for display.
