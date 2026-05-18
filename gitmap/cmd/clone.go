@@ -66,6 +66,7 @@ func runClone(args []string) {
 
 	requireOnline()
 	applySSHKey(cf.SSHKeyName)
+	cf = applyURLSchemeFlags(cf)
 
 	// Multi-URL form: any positional arg containing a comma, OR 2+ positional
 	// args where the second one looks like a URL. This catches PowerShell's
