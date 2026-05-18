@@ -271,6 +271,8 @@ func parseCloneFlags(args []string) CloneFlags {
 		VerifyCmdFaithfulExitOnMismatch: *verifyExitFlag,
 		PrintCloneArgv:                  *printArgvFlag,
 		NoVSCodeSync:                    *noVSCodeSyncFlag,
+		UseSSH:                          *sshFlag,
+		UseHTTPS:                        *httpsFlag,
 	}
 }
 
