@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/alimtvnetwork/gitmap-v20/gitmap/clonenext"
 	"github.com/alimtvnetwork/gitmap-v20/gitmap/constants"
