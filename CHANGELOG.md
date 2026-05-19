@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.28.0 — (2026-05-19) — `gitmap pull` cwd short-circuit + `gitm` short alias
+
+### Added
+- **`gitmap pull` (no args, inside a git repo)** now short-circuits to a plain `git pull` in the current directory — stdin/stdout/stderr are forwarded and the underlying exit code is propagated. Slug / `--group` / `--all` / aliased-repo modes are unchanged; the new behaviour only triggers when none of those targeting modes are in effect.
+- **`gitm` shell alias** — every install of the shell wrapper (Bash / Zsh / PowerShell, installed by `gitmap setup`) now also defines `gitm` as a thin forwarder to `gitmap`, so `gitm pull`, `gitm cd <name>`, `gitm clone <url>` all behave identically. Re-run `gitmap setup` (or reinstall) to pick up the new wrapper block.
+
+### Confirmed
+- `gitmap setup` auto-run after install is already shipped (since v5.18.0) — both `install.ps1` and `install.sh` call `gitmap setup` as a non-fatal final step, so the new `gitm` alias is registered automatically on fresh installs.
+
+### Pinned
+- README pinned-version block + version matrix moved to **v5.28.0**.
+- Synced `gitmap/constants/constants.go` (`Version = "5.28.0"`) and `src/constants/index.ts` (`VERSION = "v5.28.0"`).
+
 ## v5.27.0 — (2026-05-19) — `gitmap cfrp` / `cfr` honour `--ssh` / `--https`
 
 ### Fixed
