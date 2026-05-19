@@ -322,7 +322,10 @@ const (
 )
 
 // Usage header.
-const UsageHeaderFmt = "gitmap v%s\n\n"
+const UsageHeaderFmt = ColorMagenta + "  ╭─────────────────────────────────────────────╮\n" +
+	"  │  🗺  " + ColorWhite + "gitmap" + ColorMagenta + "  " + ColorCyan + "v%s" + ColorMagenta + "                          │\n" +
+	"  │  " + ColorDim + "Git repo discovery, cloning & release toolkit" + ColorMagenta + " │\n" +
+	"  ╰─────────────────────────────────────────────╯" + ColorReset + "\n\n"
 
 const (
 	HelpUsage            = "Usage: gitmap <command> [flags]"
