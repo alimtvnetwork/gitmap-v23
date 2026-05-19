@@ -174,6 +174,8 @@ gitmap() {
   fi
   command gitmap "$@"
 }
+
+gitm() { gitmap "$@"; }
 # gitmap command wrapper v1 end`
 
 // CDFuncPowerShell installs gitmap and gcd wrappers for PowerShell.
