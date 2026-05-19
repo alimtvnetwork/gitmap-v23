@@ -8,6 +8,7 @@
 - Action required for existing users: re-run `gitmap setup` (or reinstall) and reload the shell — the marker block `# gitmap shell wrapper v2` / `# gitmap command wrapper v1` is rewritten in-place by setup.
 - Pinned: README pinned-version block + version matrix moved to **v5.36.0**. Synced `gitmap/constants/constants.go` (`Version = "5.36.0"`) and `src/constants/index.ts` (`VERSION = "v5.36.0"`).
 
+## v5.35.0 — (2026-05-19) — Root README: full command surface for `push`, `pull`, `prc`, `ssh`, `cfr`/`cfrp`, `install gitmap-oneliner`
 
 
 - README "Cloning & Sync" table now lists every command added since v5.27 (`cfr`, `cfrp`, `push`, `pull`, `pull-release-cd`, `ssh view/copy/create`, `install gitmap-oneliner`) with aliases, descriptions, and copy-pasteable examples.
