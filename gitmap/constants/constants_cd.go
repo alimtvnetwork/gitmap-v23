@@ -125,6 +125,8 @@ gitmap() {
   fi
   command gitmap "$@"
 }
+
+gitm() { gitmap "$@"; }
 # gitmap command wrapper v1 end`
 
 // CDFuncZsh installs gitmap and gcd wrappers for Zsh.
@@ -172,6 +174,8 @@ gitmap() {
   fi
   command gitmap "$@"
 }
+
+gitm() { gitmap "$@"; }
 # gitmap command wrapper v1 end`
 
 // CDFuncPowerShell installs gitmap and gcd wrappers for PowerShell.
@@ -240,6 +244,8 @@ function gitmap {
     Remove-Item Env:\GITMAP_HANDOFF_FILE -ErrorAction SilentlyContinue
   }
 }
+
+function gitm { gitmap @args }
 # gitmap command wrapper v1 end`
 
 // CD function messages.
