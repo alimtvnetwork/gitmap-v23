@@ -1229,7 +1229,14 @@ nor in any error or warning channel. Silence is the contract.
 |---------|-------|-------------|
 | `clone` | `c` | Clone from a structured file OR a direct URL |
 | `clone-next` | `cn` | Clone next versioned iteration of current repo |
+| `clone-fix-repo` | `cfr` | One-shot: `clone` → `cd` → `fix-repo --all` |
+| `clone-fix-repo-pub` | `cfrp` | `cfr` + `make-public --yes` at the end |
+| `push` | `ph` | `git push` in cwd, with `--ssh` / `--https` transport coercion + auto `pull --rebase` retry on non-fast-forward rejection |
+| `pull` | — | `git pull` in cwd, with `--ssh` / `--https` transport coercion |
+| `pull-release-cd` | `prc` | Multi-repo one-shot: comma-separated `<repo> <version>` list; URL tokens auto-cloned first, then `pull-release <ver> -y` per entry |
+| `ssh view` / `copy` / `create` | `v` / `cp` / — | Inspect, copy, or create the SSH public key (clipboard-aware: `clip` / `pbcopy` / `wl-copy`) |
 | `desktop-sync` | `ds` | Sync tracked repos with GitHub Desktop |
+| `install gitmap-oneliner` | — | Print the Win/Mac install one-liners for the current repo |
 
 ```bash
 # clone from a structured file
@@ -1254,9 +1261,32 @@ gitmap cn v++                                   # my-app-v3 -> my-app-v4
 gitmap cn v15 --delete                          # jump to v15, delete current
 gitmap cn v++ --create-remote                   # create GitHub repo if missing
 gitmap cn v++ --no-flatten                      # keep nested folder layout
+
+# clone-fix-repo / clone-fix-repo-pub — one-shot pipelines (full clone-flag parity)
+gitmap cfr  https://github.com/acme/myrepo-v13.git                # clone + fix-repo --all
+gitmap cfr  https://github.com/acme/myrepo-v13.git --ssh          # coerce to SSH, then run pipeline
+gitmap cfrp git@github.com:acme/myrepo-v13.git --https            # coerce to HTTPS, fix, then make-public --yes
+gitmap cfrp https://github.com/acme/myrepo-v13.git myrepo-fresh   # explicit destination folder
+
+# push / pull — transport-aware (rewrites + persists remote.origin.url)
+gitmap push                                     # plain git push in cwd
+gitmap ph --ssh                                 # rewrite origin to SSH, push, persist
+gitmap pull --https                             # rewrite origin to HTTPS, pull, persist
+gitmap push --ssh origin main                   # extra args forward verbatim
+
+# pull-release-cd (prc) — release N repos in one shot
+gitmap prc gitmap v5.34.0, marco v2.5.0, https://github.com/me/other v3.1.0
+
+# ssh — inspect / copy / create the public key (auto-copies to clipboard)
+gitmap ssh view                                 # print + copy ~/.ssh/id_*.pub
+gitmap ssh copy                                 # copy without printing
+gitmap ssh create my-alias                      # generate + copy a new keypair
+
+# install gitmap-oneliner — print the Win/Mac install one-liners for the current repo
+gitmap install gitmap-oneliner
 ```
 
-→ [clone](gitmap/helptext/clone.md) · [clone-next](gitmap/helptext/clone-next.md) · [desktop-sync](gitmap/helptext/desktop-sync.md)
+→ [clone](gitmap/helptext/clone.md) · [clone-next](gitmap/helptext/clone-next.md) · [clone-fix-repo](gitmap/helptext/clone-fix-repo.md) · [clone-fix-repo-pub](gitmap/helptext/clone-fix-repo-pub.md) · [push](gitmap/helptext/push.md) · [pull](gitmap/helptext/pull.md) · [pull-release-cd](gitmap/helptext/pull-release-cd.md) · [ssh](gitmap/helptext/ssh.md) · [desktop-sync](gitmap/helptext/desktop-sync.md)
 
 ---
 
