@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.38.0 — (2026-05-19) — `fix-repo` bare-base rewrite restricted to v1→v2 only (no more corrupting bare `gitmap` at v3+)
+
+- **Critical fix.** Running `gitmap fix-repo` inside a `-v3` (or higher) repo no longer rewrites bare `{base}` tokens. Before v5.38.0, `fix-repo` inside `gitmap-v4` would rewrite every standalone mention of `gitmap` (binary names, package identifiers, brand strings, unrelated `https://github.com/owner/gitmap` URLs) to `gitmap-v4` — silently corrupting the working tree.
+- **New scope rule:** the bare-base sweep in `applyAllTargets` (`gitmap/cmd/fixrepo_rewrite.go`) runs if and only if `n == 1 && current == 2`. At v3+ the bare token is overwhelmingly NOT the pre-versioned origin (most projects never shipped a bare `{base}` remote in the first place) and must be preserved. Only `{base}-vN` tokens — guarded by the existing digit-boundary check — are rewritten.
+- Concretely, in `gitmap-v3`: targets are `v1, v2`; `gitmap-v1` and `gitmap-v2` become `gitmap-v3`; bare `gitmap` is left untouched. In `gitmap-v4`: `gitmap-v2, v3` become `gitmap-v4`; bare `gitmap` is left untouched. Only in the v1→v2 transition is the bare token rewritten.
+- Spec updated: `spec/04-generic-cli/27-fix-repo-command.md` now has a dedicated **Bare-base scope rule (v5.38.0+)** section documenting the v1→v2 restriction with a worked `gitmap-v4` example.
+- Regression tests: `TestApplyAllTargets_BareBase_SkippedAtV3Plus` and `TestApplyAllTargets_BareBase_SkippedAtV4WithV1InTargets` in `gitmap/cmd/fixrepo_rewrite_barebase_test.go` lock in the new behavior. The existing v1→v2 test (`TestApplyAllTargets_BareBase_V1To2`) is unchanged.
+- Memory updated: `.lovable/memory/features/fix-repo-bare-base-rewrite.md` reflects the new scope.
+- Pinned: README pinned-version block + version matrix moved to **v5.38.0**. Synced `gitmap/constants/constants.go` (`Version = "5.38.0"`) and `src/constants/index.ts` (`VERSION = "v5.38.0"`).
+
 ## v5.37.0 — (2026-05-19) — Colorful root help banner + build-info footer (version · repo · last commit)
 
 - Bare `gitmap` and `gitmap help` now open with a magenta/cyan banner (`🗺  gitmap vX.Y.Z — Git repo discovery, cloning & release toolkit`) and close with a build-info footer showing the installed version, source repo origin URL, current branch, and the last commit (`shortSHA · subject · relative-date`).
