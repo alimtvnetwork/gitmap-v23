@@ -119,6 +119,18 @@ func (e *buildError) Error() string {
 // runGitmap executes the prebuilt binary with args + optional stdin
 // and returns (exit code, stdout, stderr). Wraps the awkward parts
 // of os/exec so call sites stay declarative.
+//
+// Windows-CI note (v5.47.0): on the GitHub Actions `windows-latest`
+// runner under `pwsh -command ". '{0}'"`, when `cmd.Stdout`/`Stderr`
+// is set to a `bytes.Buffer`, Go's `os/exec` internally creates an
+// `os.Pipe()` and copies bytes in a goroutine. That pipe inherits
+// from pwsh's already-redirected console handles and the runner has
+// a long-standing bug where the parent end of those pipes reads
+// EOF immediately — even though the child writes correctly. The
+// documented workaround is to redirect the child to a *file* (real
+// fd inheritance, no Go pipe goroutine in between) and read the
+// file after the process exits. We use this everywhere now so the
+// same code path runs on every OS instead of carving out Windows.
 func runGitmap(t *testing.T, args []string, stdin string) (int, string, string) {
 	t.Helper()
 	bin := ensureGitmapBinary(t)
@@ -126,12 +138,36 @@ func runGitmap(t *testing.T, args []string, stdin string) (int, string, string) 
 	cmd.Dir = t.TempDir()
 	cmd.Env = hermeticEnv()
 	cmd.Stdin = strings.NewReader(stdin)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
 
-	return extractTestExitCode(err), stdout.String(), stderr.String()
+	stdoutPath := filepath.Join(t.TempDir(), "stdout")
+	stderrPath := filepath.Join(t.TempDir(), "stderr")
+
+	stdoutF, err := os.Create(stdoutPath)
+	if err != nil {
+		t.Fatalf("create stdout capture file: %v", err)
+	}
+	stderrF, err := os.Create(stderrPath)
+	if err != nil {
+		t.Fatalf("create stderr capture file: %v", err)
+	}
+
+	cmd.Stdout = stdoutF
+	cmd.Stderr = stderrF
+
+	runErr := cmd.Run()
+	stdoutF.Close()
+	stderrF.Close()
+
+	stdoutBytes, readErr1 := os.ReadFile(stdoutPath)
+	stderrBytes, readErr2 := os.ReadFile(stderrPath)
+	if readErr1 != nil {
+		t.Fatalf("read stdout capture file: %v", readErr1)
+	}
+	if readErr2 != nil {
+		t.Fatalf("read stderr capture file: %v", readErr2)
+	}
+
+	return extractTestExitCode(runErr), string(stdoutBytes), string(stderrBytes)
 }
 
 // hermeticEnv strips variables that could change behavior between
