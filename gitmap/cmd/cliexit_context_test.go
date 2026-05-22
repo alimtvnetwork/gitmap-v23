@@ -50,7 +50,6 @@ func skipOnWindowsSubprocess(t *testing.T) {
 // not-exist phrasings so OS-specific wording (Linux vs Windows)
 // doesn't make the test brittle.
 func TestCLI_FailureContext_Scan(t *testing.T) {
-	skipOnWindowsSubprocess(t)
 	t.Parallel()
 	missing := filepath.Join(t.TempDir(), "definitely-not-here")
 	code, stdout, stderr := runGitmap(t, []string{"scan", "--quiet", missing}, "")
@@ -72,7 +71,6 @@ func TestCLI_FailureContext_Scan(t *testing.T) {
 // against a manifest path that doesn't exist. Asserts the command
 // label, the manifest path, and an open/read failure phrase.
 func TestCLI_FailureContext_CloneFromMissingManifest(t *testing.T) {
-	skipOnWindowsSubprocess(t)
 	t.Parallel()
 	missing := filepath.Join(t.TempDir(), "no-such-manifest.json")
 	code, stdout, stderr := runGitmap(t,
@@ -91,7 +89,6 @@ func TestCLI_FailureContext_CloneFromMissingManifest(t *testing.T) {
 // counterpart. Distinct from clone-from: clone-now uses a different
 // parser path and we want both surfaces validated.
 func TestCLI_FailureContext_CloneNowMissingManifest(t *testing.T) {
-	skipOnWindowsSubprocess(t)
 	t.Parallel()
 	missing := filepath.Join(t.TempDir(), "no-such-manifest.json")
 	code, stdout, stderr := runGitmap(t,

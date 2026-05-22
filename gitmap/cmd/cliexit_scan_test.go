@@ -52,7 +52,6 @@ func TestScanCLI_ExitCodes(t *testing.T) {
 				// Output-capture contract: skipped on Windows
 				// per skipOnWindowsSubprocess (pwsh-runner
 				// quirk). Exit-code contract still runs.
-				skipOnWindowsSubprocess(t)
 			}
 			code, stdout, stderr := runGitmap(t, tc.args(t), "")
 			if code != tc.wantCode {
