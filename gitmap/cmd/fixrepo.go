@@ -62,8 +62,10 @@ func runFixRepo(args []string) {
 		// branch on "rewrite produced semantically broken code" vs
 		// other write/IO failures. Reported even if gofmt also failed
 		// — strict failure is the more actionable diagnosis.
+		emitFixRepoTips(opts, result.changed)
 		os.Exit(constants.FixRepoExitTestsFailed)
 	}
+	emitFixRepoTips(opts, result.changed)
 	if result.failed {
 		os.Exit(constants.FixRepoExitWriteFailed)
 	}
