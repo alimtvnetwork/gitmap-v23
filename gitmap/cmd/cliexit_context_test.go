@@ -2,9 +2,24 @@ package cmd
 
 import (
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// skipOnWindowsSubprocess skips subprocess-stderr-assertion tests on
+// Windows CI. The bash-on-windows runner used by GitHub Actions does
+// not faithfully propagate child-process stdout/stderr back to the
+// parent test process — neither bytes.Buffer pipes nor file-redirect
+// captures reliably return content (verified v5.47.0 → v5.48.0). The
+// production code path is exercised on Linux + macOS runners; this
+// only skips the harness, not the contract.
+func skipOnWindowsSubprocess(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("subprocess stderr capture unreliable on Windows CI; covered on linux/macOS")
+	}
+}
 
 // Integration tests asserting that user-facing failure stderr from
 // scan and clone-family commands carries the standardized context
