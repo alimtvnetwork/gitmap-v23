@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/alimtvnetwork/gitmap-v22/gitmap/constants"
+	"github.com/alimtvnetwork/gitmap-v22/gitmap/glyphs"
 	"github.com/alimtvnetwork/gitmap-v22/gitmap/theme"
 )
 
