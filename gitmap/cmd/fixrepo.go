@@ -37,7 +37,7 @@ func runFixRepo(args []string) {
 	opts, err := parseFixRepoArgs(args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, constants.FixRepoErrBadFlagFmt, err.Error())
-		os.Exit(constants.FixRepoExitBadFlag)
+		cliexit.Exit(constants.FixRepoExitBadFlag)
 	}
 	identity := resolveFixRepoIdentity()
 	loadFixRepoConfig(opts.configPath, identity.root)
@@ -48,7 +48,7 @@ func runFixRepo(args []string) {
 		emitFixRepoSummary(0, 0, 0, opts.isDryRun)
 		fmt.Print(constants.FixRepoMsgNothing)
 		emitFixRepoTips(opts, 0)
-		os.Exit(constants.FixRepoExitOk)
+		cliexit.Exit(constants.FixRepoExitOk)
 	}
 	result := runFixRepoSweep(identity, targets, opts)
 	if result.backup != nil {
@@ -64,13 +64,13 @@ func runFixRepo(args []string) {
 		// other write/IO failures. Reported even if gofmt also failed
 		// — strict failure is the more actionable diagnosis.
 		emitFixRepoTips(opts, result.changed)
-		os.Exit(constants.FixRepoExitTestsFailed)
+		cliexit.Exit(constants.FixRepoExitTestsFailed)
 	}
 	emitFixRepoTips(opts, result.changed)
 	if result.failed {
-		os.Exit(constants.FixRepoExitWriteFailed)
+		cliexit.Exit(constants.FixRepoExitWriteFailed)
 	}
-	os.Exit(constants.FixRepoExitOk)
+	cliexit.Exit(constants.FixRepoExitOk)
 }
 
 // computeFixRepoSpan maps the mode flag to an integer span. `--all`
