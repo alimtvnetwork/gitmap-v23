@@ -8,6 +8,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "v5.53.0",
+    date: "2026-05-22",
+    subtitle: "Deterministic pipe drain on exit (Windows CI fix)",
+    items: [
+      "Fixed: bytes written to os.Stdout/os.Stderr just before os.Exit could be dropped on Windows when glyphs or theme wrapped the fds with a pipe-backed forwarder goroutine — the documented root cause of the cliexit subprocess-test flakiness on the windows-latest GHA runner.",
+      "Added: `glyphs.Drain()` and `theme.Drain()` flush every installed pipe writer and wait for the matching forwarder goroutine before returning.",
+      "Added: `cliexit.RegisterFlusher(func())` registry; `cliexit.Fail` invokes every flusher in order before `os.Exit`. Wired in `cmd/root.go` right after `theme.Install()` / `glyphs.Install()`.",
+      "Changed: subprocess test `hermeticEnv` now pins `GITMAP_GLYPHS=rich` and `GITMAP_THEME=bright`, bypassing the pipe wrap entirely under test (defense in depth).",
+      "Removed: per-test `skipOnWindowsSubprocess(t)` guards across `cliexit_context_test.go`, `cliexit_scan_test.go`, `cliexit_clone_test.go`. Helper kept as no-op shim.",
+      "Pinned: README pinned-version block + version matrix moved to v5.53.0; synced `gitmap/constants/constants.go` and `src/constants/index.ts`.",
+    ],
+  },
+  {
     version: "v5.52.0",
     date: "2026-05-22",
     subtitle: "Native sibling-repo probe for `gitmap update`",
