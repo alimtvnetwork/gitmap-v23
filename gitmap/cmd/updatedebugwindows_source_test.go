@@ -99,13 +99,15 @@ func parseUpdateDebugWindows(t *testing.T) *ast.File {
 	t.Helper()
 
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, updatedebugwindowsPath, nil, parser.ParseComments)
-	if err != nil {
-		t.Fatalf("parse %s: %v", updatedebugwindowsPath, err)
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatalf("runtime.Caller failed; cannot resolve absolute path to %s", updatedebugwindowsPath)
 	}
-
-	return file
-}
+	absPath := filepath.Join(filepath.Dir(thisFile), updatedebugwindowsPath)
+	file, err := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parse %s: %v", absPath, err)
+	}
 
 // hasFsutilImport reports whether the parsed file imports the canonical
 // fsutil package path. Strips the surrounding quotes from the import
