@@ -101,3 +101,13 @@ First refresh the probe so `--only-available` has fresh data:
 - [status](status.md) — Check repo statuses before pulling
 - [group](group.md) — Manage groups for targeted pulls
 - [alias](alias.md) — Manage repo aliases
+
+## Scripting (JSON)
+
+Discover this command from a script using the machine-readable help payload:
+
+```bash
+gitmap help --json --filter pull
+```
+
+The JSON schema is published at `spec/08-json-schemas/help-json.schema.json` (v5.43.0+).

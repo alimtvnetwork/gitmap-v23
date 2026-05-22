@@ -233,3 +233,13 @@ Delete the cache file to force a full reclone of every entry.
 - [pull](pull.md) — Pull individual or grouped repos
 - [desktop-sync](desktop-sync.md) — Sync repos to GitHub Desktop
 - [clone-next](clone-next.md) — Clone next version of a repo
+
+## Scripting (JSON)
+
+Discover this command from a script using the machine-readable help payload:
+
+```bash
+gitmap help --json --filter clone
+```
+
+The JSON schema is published at `spec/08-json-schemas/help-json.schema.json` (v5.43.0+).

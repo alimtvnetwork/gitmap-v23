@@ -61,3 +61,13 @@ wins and a one-line warning is printed to stderr.
 
 - [pull](pull.md) — Pull from origin with the same `--ssh`/`--https` flags
 - [clone](clone.md) — Clone with `--ssh` / `--https` transport coercion
+
+## Scripting (JSON)
+
+Discover this command from a script using the machine-readable help payload:
+
+```bash
+gitmap help --json --filter push
+```
+
+The JSON schema is published at `spec/08-json-schemas/help-json.schema.json` (v5.43.0+).
