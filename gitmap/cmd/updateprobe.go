@@ -28,25 +28,25 @@ type probeResult struct {
 // and returns the winning repo slug plus the source label that produced
 // it. Spec: spec/01-app/111-update-remote-probe.md.
 func resolveLatestRepoSlug(httpClient *http.Client) (string, string, error) {
-	base, current, err := parseCurrentRepoSlug(constants.UpdateCurrentRepoSlug)
+	base, currentN, err := parseCurrentRepoSlug(constants.UpdateCurrentRepoSlug)
 	if err != nil {
 		return "", "", err
 	}
 
-	if slug, ok := probeSiblings(httpClient, base, current, constants.UpdateProbeMaxSiblings); ok {
+	if slug, ok := probeSiblings(httpClient, base, currentN, constants.UpdateProbeMaxSiblings); ok {
 		fmt.Printf(constants.MsgUpdateProbeResolve, slug, constants.UpdateProbeSourceSibling)
 		return slug, constants.UpdateProbeSourceSibling, nil
 	}
 
-	current := constants.UpdateCurrentRepoSlug
-	if releaseFallbackOK(httpClient, current) {
-		fmt.Printf(constants.MsgUpdateProbeResolve, current, constants.UpdateProbeSourceRelease)
-		return current, constants.UpdateProbeSourceRelease, nil
+	currentSlug := constants.UpdateCurrentRepoSlug
+	if releaseFallbackOK(httpClient, currentSlug) {
+		fmt.Printf(constants.MsgUpdateProbeResolve, currentSlug, constants.UpdateProbeSourceRelease)
+		return currentSlug, constants.UpdateProbeSourceRelease, nil
 	}
 
-	if mainFallbackOK(httpClient, current) {
-		fmt.Printf(constants.MsgUpdateProbeResolve, current, constants.UpdateProbeSourceMain)
-		return current, constants.UpdateProbeSourceMain, nil
+	if mainFallbackOK(httpClient, currentSlug) {
+		fmt.Printf(constants.MsgUpdateProbeResolve, currentSlug, constants.UpdateProbeSourceMain)
+		return currentSlug, constants.UpdateProbeSourceMain, nil
 	}
 
 	fmt.Fprint(os.Stderr, constants.ErrUpdateProbeNoResolve)
