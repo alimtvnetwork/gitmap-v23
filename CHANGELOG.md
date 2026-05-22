@@ -1,8 +1,11 @@
 # Changelog
 
-## v5.55.0 — (2026-05-22) — Minor version bump
+## v5.56.0 — (2026-05-22) — fix-repo: pipe drain before exit (Windows CI fix)
 
-- Pinned: README pinned-version block + version matrix moved to **v5.55.0**. Synced `gitmap/constants/constants.go` (`Version = "5.55.0"`) and `src/constants/index.ts` (`VERSION = "v5.55.0"`).
+- Fixed: `TestFixRepoGofmtCleanAfterRewrite` failed on `windows-latest` because the `gofmt:` summary line printed by `runFixRepoGofmt` was lost under the pipe-wrapped `os.Stdout` installed by the `glyphs` / `theme` packages. The fix-repo entry point called bare `os.Exit(...)` which bypassed the v5.53.0 `cliexit` drain step, leaving the forwarding goroutines unscheduled and the last writes stuck in the pipe buffer.
+- Added: `cliexit.Exit(code)` — flushes every registered drainer (the same set used by `cliexit.Fail`) and then calls `os.Exit`. Use at non-error exit sites that still need pipe-wrapped stdout/stderr drained before process teardown.
+- Changed: `gitmap/cmd/fixrepo.go` swapped all five `os.Exit(constants.FixRepo*)` call sites to `cliexit.Exit(...)` so the gofmt + strict + summary lines always make it to the captured stream on Windows.
+- Pinned: README pinned-version block + version matrix moved to **v5.56.0**. Synced `gitmap/constants/constants.go` (`Version = "5.56.0"`) and `src/constants/index.ts` (`VERSION = "v5.56.0"`).
 
 
 ## v5.54.0 — (2026-05-22) — verify-cmd-faithful: displayed branch matches argv

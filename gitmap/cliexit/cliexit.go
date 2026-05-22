@@ -114,6 +114,16 @@ func Fail(command, op, subject string, err error, code int) {
 	os.Exit(code)
 }
 
+// Exit flushes any registered output pipes and exits with the given
+// code. Use at non-error os.Exit sites that still need pipe-wrapped
+// stdout/stderr drained before process teardown — without this, the
+// final lines printed via fmt.Print can be lost on Windows when the
+// glyphs/theme forwarding goroutines never get scheduled.
+func Exit(code int) {
+	runFlushers()
+	os.Exit(code)
+}
+
 // writeReport is the format core. Extracted so the test suite can
 // drive it through a bytes.Buffer without intercepting os.Stderr.
 func writeReport(w io.Writer, command, op, subject string, err error) {
