@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.44.0 — (2026-05-22) — TypeScript types for `help --json` + installer probing confirmed
+
+- **New:** `src/types/helpJson.ts` ships TypeScript types + `isHelpJsonPayload` runtime guard generated from `spec/08-json-schemas/help-json.schema.json`. Vitest suite locks the shape (4 tests).
+- **README:** new "Help UX — discover commands fast" section documents `--compact`, `--groups`, `--filter`/`-f`, and `--json` with a direct link to the JSON Schema.
+- **Installer probing — confirmed already shipping** in `install.ps1` + `install.sh`: no `--version` → parallel `-v<N+i>` sibling-repo HEAD probe (ceiling 30, override via `--probe-ceiling N` / `-ProbeCeiling N`) → `releases/latest` → main HEAD. Explicit `--version <tag>` stays strict (no fallback ever, exit 1 on miss). Spec: `spec/07-generic-release/09-generic-install-script-behavior.md`.
+- Pinned: README pinned-version block + version matrix moved to **v5.44.0**. Synced `gitmap/constants/constants.go` (`Version = "5.44.0"`) and `src/constants/index.ts` (`VERSION = "v5.44.0"`).
+
+
+
 ## v5.43.1 — (2026-05-22) — Published `help --json` JSON Schema
 
 - **New:** `spec/08-json-schemas/help-json.schema.json` formally defines the `gitmap help --json` payload (`version`, `count`, grouped `lines`). Contract test `helpjson_jsonschema_contract_test.go` validates runtime output against the schema to prevent drift.
