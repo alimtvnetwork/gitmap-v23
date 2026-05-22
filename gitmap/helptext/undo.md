@@ -58,3 +58,13 @@ undo: restored 7 file(s), 0 failure(s)
 missing/malformed).
 
 See `spec/04-generic-cli/27-fix-repo-command.md` §"Backup & undo".
+
+## Scripting (JSON)
+
+Discover this command from a script using the machine-readable help payload:
+
+```bash
+gitmap help --json --filter undo
+```
+
+The JSON schema is published at `spec/08-json-schemas/help-json.schema.json` (v5.43.0+).
