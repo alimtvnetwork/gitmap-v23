@@ -116,6 +116,7 @@ func printCloneFromTermBlockRow(index, total int, row clonefrom.Row,
 		TargetURL:        row.URL,
 		Dest:             dest,
 		CmdBranch:        row.Branch, // executor uses row.Branch, NOT detected
+		CmdExtraArgsPre:  cmdExtraArgsPreForRowBranch(row.Branch),
 		CmdExtraArgsPost: post,
 	}
 	maybePrintCloneTermBlock(constants.OutputTerminal, in)
