@@ -58,6 +58,7 @@ var expectedCtxArgv = map[string]struct {
 	// Top-level standalone entries
 	"90_terminal": {"", nil}, // Prefill mode; no argv
 	"91_docs":     {"", []string{"docs"}},
+	"92_help":     {"", []string{constants.CmdHelp}},
 }
 
 // flattenCtxMenu walks ctxMenu() and returns a path→entry map keyed by the
