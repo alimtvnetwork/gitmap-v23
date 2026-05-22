@@ -6,15 +6,6 @@ import (
 	"testing"
 )
 
-// Subprocess-output capture in this suite uses real temp-file fd
-// inheritance (see runGitmap in cliexit_helpers_test.go). That works
-// uniformly on Linux, macOS, and the GitHub Actions windows-latest
-// runner under `pwsh -command ". '{0}'"`, so no per-OS skips are
-// needed — the historical `skipOnWindowsSubprocess` helper was
-// removed in v5.47.0 once the pipe→file capture switch landed.
-
-
-
 // Integration tests asserting that user-facing failure stderr from
 // scan and clone-family commands carries the standardized context
 // fields produced by gitmap/cliexit:

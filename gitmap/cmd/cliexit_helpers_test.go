@@ -25,8 +25,8 @@ package cmd
 // environment that *can* build the binary.
 
 import (
+	"bytes"
 	"errors"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -126,8 +126,7 @@ func (e *buildError) Error() string {
 // `os.Pipe()` and copies bytes in a goroutine. That pipe inherits
 // from pwsh's already-redirected console handles and the runner has
 // a long-standing bug where the parent end of those pipes reads
-// EOF immediately — even though the child writes correctly. See
-// actions/runner#382 and the StepCodex pwsh-stdio bug report. The
+// EOF immediately — even though the child writes correctly. The
 // documented workaround is to redirect the child to a *file* (real
 // fd inheritance, no Go pipe goroutine in between) and read the
 // file after the process exits. We use this everywhere now so the
@@ -139,46 +138,36 @@ func runGitmap(t *testing.T, args []string, stdin string) (int, string, string) 
 	cmd.Dir = t.TempDir()
 	cmd.Env = hermeticEnv()
 	cmd.Stdin = strings.NewReader(stdin)
-	stdoutFile := mustCaptureFile(t, "stdout")
-	stderrFile := mustCaptureFile(t, "stderr")
-	defer func() { _ = stdoutFile.Close() }()
-	defer func() { _ = stderrFile.Close() }()
-	cmd.Stdout = stdoutFile
-	cmd.Stderr = stderrFile
-	err := cmd.Run()
 
-	return extractTestExitCode(err), mustReadAll(t, stdoutFile), mustReadAll(t, stderrFile)
-}
+	stdoutPath := filepath.Join(t.TempDir(), "stdout")
+	stderrPath := filepath.Join(t.TempDir(), "stderr")
 
-// mustCaptureFile opens a fresh temp file for child-process output
-// capture. Inheriting a real OS file handle avoids the Go-pipe
-// goroutine path inside `os/exec` that pwsh-on-runner mishandles
-// (see runGitmap doc comment).
-func mustCaptureFile(t *testing.T, label string) *os.File {
-	t.Helper()
-	f, err := os.CreateTemp(t.TempDir(), "gitmap-"+label+"-*.log")
+	stdoutF, err := os.Create(stdoutPath)
 	if err != nil {
-		t.Fatalf("create %s capture file: %v", label, err)
+		t.Fatalf("create stdout capture file: %v", err)
 	}
-
-	return f
-}
-
-// mustReadAll seeks to start and reads the entire capture file.
-// Tests never need more than a few KB so a single Read pass is
-// sufficient; failures are fatal because they always mean a test
-// infrastructure bug, not a product regression.
-func mustReadAll(t *testing.T, f *os.File) string {
-	t.Helper()
-	if _, err := f.Seek(0, 0); err != nil {
-		t.Fatalf("seek capture file: %v", err)
-	}
-	b, err := io.ReadAll(f)
+	stderrF, err := os.Create(stderrPath)
 	if err != nil {
-		t.Fatalf("read capture file: %v", err)
+		t.Fatalf("create stderr capture file: %v", err)
 	}
 
-	return string(b)
+	cmd.Stdout = stdoutF
+	cmd.Stderr = stderrF
+
+	runErr := cmd.Run()
+	stdoutF.Close()
+	stderrF.Close()
+
+	stdoutBytes, readErr1 := os.ReadFile(stdoutPath)
+	stderrBytes, readErr2 := os.ReadFile(stderrPath)
+	if readErr1 != nil {
+		t.Fatalf("read stdout capture file: %v", readErr1)
+	}
+	if readErr2 != nil {
+		t.Fatalf("read stderr capture file: %v", readErr2)
+	}
+
+	return extractTestExitCode(runErr), string(stdoutBytes), string(stderrBytes)
 }
 
 // hermeticEnv strips variables that could change behavior between

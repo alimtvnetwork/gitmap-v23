@@ -48,10 +48,6 @@ func TestScanCLI_ExitCodes(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			// Output-capture contract: enforced on all OSes now
-			// that runGitmap uses temp-file fd inheritance to
-			// dodge the pwsh-runner pipe-EOF quirk (v5.47.0).
-
 			code, stdout, stderr := runGitmap(t, tc.args(t), "")
 			if code != tc.wantCode {
 				t.Fatalf("exit=%d want=%d\nstdout=%s\nstderr=%s",

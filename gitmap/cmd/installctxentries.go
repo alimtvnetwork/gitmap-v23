@@ -9,14 +9,7 @@ type ctxEntry struct {
 	MUIVerb  string // visible label
 	Args     []string
 	Mode     constants.CtxMode
-	Exe      string // override executable; empty => use the gitmap binary
-	// Icon (v5.47.0+) is an optional absolute path to an .exe / .ico
-	// used as the menu-item glyph. When set, a `reg add ... /v Icon`
-	// command is emitted alongside the entry's `/ve` write. Applies
-	// to both leaf and category entries — categories show the icon
-	// next to their cascade arrow. Empty => no Icon value written
-	// (Explorer falls back to the host application's default).
-	Icon     string
+	Exe      string     // override executable; empty => use the gitmap binary
 	Extended bool       // Windows: Shift+right-click only (HKCU "Extended" REG_SZ); macOS/Linux: prepend confirm prompt
 	Children []ctxEntry // non-nil => this is a submenu
 }
@@ -33,6 +26,8 @@ func ctxMenu() []ctxEntry {
 		{KeyName: "50_visibility", MUIVerb: "Visibility", Children: visibilityChildren()},
 		{KeyName: "60_tools", MUIVerb: "Tools", Children: toolsChildren()},
 		{KeyName: "70_git", MUIVerb: "Git", Children: gitChildren()},
+		{KeyName: "90_terminal", MUIVerb: constants.MsgCtxOpenTerminalLbl, Mode: constants.CtxModePrefill},
+		{KeyName: "91_docs", MUIVerb: constants.MsgCtxDocsLbl, Args: []string{constants.CmdDocs}, Mode: constants.CtxModeSilent},
 		{KeyName: "90_terminal", MUIVerb: constants.MsgCtxOpenTerminalLbl, Mode: constants.CtxModePrefill},
 		{KeyName: "91_docs", MUIVerb: constants.MsgCtxDocsLbl, Args: []string{constants.CmdDocs}, Mode: constants.CtxModeSilent},
 		{KeyName: "92_help", MUIVerb: "Help (filter…)", Args: []string{constants.CmdHelp}, Mode: constants.CtxModePrefill},
