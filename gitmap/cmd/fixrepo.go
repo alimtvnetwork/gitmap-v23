@@ -8,6 +8,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/alimtvnetwork/gitmap-v23/gitmap/constants"
 )
