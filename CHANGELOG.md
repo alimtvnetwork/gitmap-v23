@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.64.0 — (2026-05-26) — `history --json` migrated to `stablejson` + published JSON schema
+## v5.65.0 — (2026-05-26) — `watch --json` migrated to `stablejson` + published JSON schema
 
 - Migrated: `gitmap history --json` encoder onto `gitmap/stablejson` (new `gitmap/cmd/historyrender.go`). Key order (`id`, `command`, `alias`, `args`, `flags`, `startedAt`, `finishedAt`, `durationMs`, `exitCode`, `summary`, `repoCount`, `createdAt`) is now a compile-time decision via package-level wire-key constants instead of a reflection accident on `model.CommandHistoryRecord`.
 - Added: `spec/08-json-schemas/history.schema.json` — published JSON Schema for downstream consumers.
