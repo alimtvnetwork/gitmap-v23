@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.64.0 — (2026-05-26) — `history --json` migrated to `stablejson` + published JSON schema
+
+- Migrated: `gitmap history --json` encoder onto `gitmap/stablejson` (new `gitmap/cmd/historyrender.go`). Key order (`id`, `command`, `alias`, `args`, `flags`, `startedAt`, `finishedAt`, `durationMs`, `exitCode`, `summary`, `repoCount`, `createdAt`) is now a compile-time decision via package-level wire-key constants instead of a reflection accident on `model.CommandHistoryRecord`.
+- Added: `spec/08-json-schemas/history.schema.json` — published JSON Schema for downstream consumers.
+- Added: `gitmap/cmd/history_jsonschema_contract_test.go` — pairs the runtime encoder with the published schema so drift in either side fails the build (top-level array shape, required key set, encoder-keys ⊂ schema.properties).
+- Added: `gitmap/cmd/historyjson_contract_test.go` — golden fixture + key-order contract for the stablejson output.
+- Added: `gitmap/cmd/testdata/schemas/history.v1.json` — schema registry entry for key-order drift detection.
+- Updated: `spec/08-json-schemas/_TODO.md` — `history` flipped from `high` to `done`.
+- Pinned: README + `gitmap/constants/constants.go` + `src/constants/index.ts` synced to **v5.64.0**.
+
+
+
 ## v5.63.0 — (2026-05-26) — `find-next --json` migrated to `stablejson` + published JSON schema
 
 - Migrated: `gitmap find-next --json` encoder onto `gitmap/stablejson` (new `gitmap/cmd/findnextrender.go`). Top-level key order (`repo`, `nextVersionTag`, `nextVersionNum`, `method`, `probedAt`) is now a compile-time decision via package-level wire-key constants instead of a reflection accident on `model.FindNextRow`. Byte output is unchanged thanks to the stablejson byte-compat contract with `json.Encoder.SetIndent("", "  ")`.
