@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -144,13 +143,10 @@ func resolveStatus(code int) string {
 	return constants.MsgHistoryStatusFail
 }
 
-// printHistoryJSON outputs history as JSON.
+// printHistoryJSON outputs history as stable JSON via the encoder
+// in historyrender.go.
 func printHistoryJSON(records []model.CommandHistoryRecord) {
-	data, err := json.MarshalIndent(records, "", "  ")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  ✗ Failed to marshal history to JSON: %v\n", err)
-
-		return
+	if err := encodeHistoryJSON(os.Stdout, records); err != nil {
+		fmt.Fprintf(os.Stderr, "  ✗ Failed to encode history to JSON: %v\n", err)
 	}
-	fmt.Println(string(data))
 }
