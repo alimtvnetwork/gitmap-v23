@@ -1603,6 +1603,15 @@ gitmap make-public                          # interactive
 gitmap make-public --yes                    # CI / scripts
 gitmap make-public --dry-run --verbose      # preview the gh/glab call
 
+# v5.61.0+ — bulk visibility (N most recent versions of a base repo)
+gitmap make-public 3                                # flip current + 2 prior versions
+gitmap make-public macro-ahk-v40 5                  # flip v40..v36 of macro-ahk
+gitmap make-private https://github.com/me/foo-v9 2  # privatize v9 + v8
+
+# v5.61.0+ — cfrp now offers to privatize prior public versions
+gitmap cfrp https://github.com/me/foo-v40           # prompts after publishing v40
+gitmap cfrp https://github.com/me/foo-v40 -y        # auto-privatize, no prompts
+
 # Stitch every versioned sibling's history into one canonical repo
 gitmap commit-in ./canonical all --save-profile Default --set-default
 gitmap cin       ./canonical -3 --dry-run --function-intel on --languages Go,TypeScript
